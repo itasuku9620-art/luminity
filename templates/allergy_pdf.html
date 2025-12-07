@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>{{ store["店舗名"] }}|アレルギー表（PDF）</title>
+
+<style>
+body {
+    font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+    margin: 0;
+    padding: 0;
+    background: white;
+}
+
+/* ヘッダー */
+.header {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(90deg, #ffe9b3 0%, #fff2cc 100%);
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    font-size: 26px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* テーブル */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 12px;
+}
+
+th {
+    background: #f9f4e8;
+    font-size: 12px;
+    border: 1px solid #ccc;
+    padding: 6px;
+}
+
+td {
+    border: 1px solid #ccc;
+    text-align: center;
+    padding: 6px;
+}
+
+/* ○ × の色 */
+.mark-circle {
+    color: #e60000;
+    font-weight: bold;
+    font-size: 14px;
+}
+.mark-cross {
+    color: #009944;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* 備考欄 */
+.note-block {
+    margin-top: 20px;
+    border: 1px solid #bbb;
+    padding: 10px;
+    font-size: 11px;
+}
+
+/* フッター */
+.footer {
+    margin-top: 10px;
+    font-size: 10px;
+    color: #666;
+    text-align: right;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="logo">Luminity</div>
+    <img src="{{ qr_path }}" style="width:90px; margin-left:auto;">
+</div>
+
+<h3>特定原材料7品目</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>メニュー</th>
+            {% for a in primary_allergens %}
+                <th>{{ a }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row["メニュー"] }}</td>
+            {% for a in primary_allergens %}
+                {% set v = row.get(a) %}
+                <td>
+                    {% if v in ["○", "◯", "あり"] %}
+                        <span class="mark-circle">◯</span>
+                    {% elif v in ["×", "なし"] %}
+                        <span class="mark-cross">×</span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3 style="margin-top: 28px;">その他21品目</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>メニュー</th>
+            {% for a in other_allergens %}
+                <th>{{ a }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row["メニュー"] }}</td>
+            {% for a in other_allergens %}
+                {% set v = row.get(a) %}
+                <td>
+                    {% if v in ["○", "◯", "あり"] %}
+                        <span class="mark-circle">◯</span>
+                    {% elif v in ["×", "なし"] %}
+                        <span class="mark-cross">×</span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="note-block">
+    <b>【備考】</b><br>
+    ・原材料や工場の製造ラインにより、完全なアレルゲン除去を保証するものではありません。<br>
+    ・店舗ごとの取り扱い状況により変更する場合があります。
+</div>
+
+<div class="footer">
+    更新日：{{ store["更新日"] }}
+</div>
+
+</body>
+</html>

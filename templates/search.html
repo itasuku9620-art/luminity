@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+{% block title %}検索 - Luminity{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+    --bg:#fff9ee; --ink:#2b261f; --muted:#6b6052; --card:#ffffff; --line:#efe6d8;
+    --accent:#ffb300; --accent-deep:#f57c00;
+    --ok:#10b981; --warn:#f59e0b; --ng:#ef4444; --pending:#9ca3af;
+  }
+  .page{max-width:1200px;margin:16px auto 48px;padding:0 16px;}
+  .hero{
+    border:1px solid var(--line);border-radius:26px;padding:12px;background:
+      radial-gradient(900px 360px at 92% -20%, rgba(255,179,0,.20), transparent 60%),
+      radial-gradient(720px 360px at -10% 100%, rgba(255,224,130,.24), transparent 60%),
+      linear-gradient(160deg,#fff,#fff2cf);
+    margin-bottom:10px;
+  }
+  .hero h1{font-family:"Shippori Mincho","Noto Serif JP",serif;font-weight:900;font-size:20px;margin:0;}
+
+  /* 上部に固定される地図（ページ全体を親としてsticky） */
+  .map-box{position:sticky; top:10px; z-index:1; margin:10px 0 14px;}
+  #map{width:100%;height:56vh;min-height:380px;border:1px solid var(--line);border-radius:20px;background:#fff2bd}
+  @media (max-width:1024px){ #map{height:360px;min-height:360px} }
+  .map-controls{position:absolute;right:12px;top:12px;display:flex;gap:8px;z-index:2}
+  .mc-btn{appearance:none;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-weight:800;cursor:pointer}
+  .legend{position:absolute;left:12px;top:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 8px;font-size:12px;display:flex;gap:10px;align-items:center;z-index:2}
+  .lg{display:inline-flex;gap:6px;align-items:center}
+  .lg i{width:14px;height:20px;display:inline-block;background-size:contain;background-repeat:no-repeat}
+
+  /* フィルタ */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+  .chip{appearance:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-weight:900;cursor:pointer}
+  .chip[aria-pressed="true"]{background:linear-gradient(180deg,#ffe08a,#ffc44d);border-color:#ffd166}
+  .chip.toggle{padding:8px 14px}
+
+  /* カード群 */
+  .cards{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .card{grid-column:span 12;display:grid;grid-template-columns:200px 1fr;gap:14px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;position:relative}
+  @media (min-width:900px){.card{grid-column:span 6}}
+  .card.is-hover{outline:2px solid rgba(255,179,0,.35);outline-offset:2px}
+  .ph{height:160px;border-radius:12px;background:#fff3c7;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .ph img{width:100%;height:100%;object-fit:cover}
+  .title{font-size:20px;font-weight:900;margin:2px 0}
+  .meta{color:#6b6052}
+  .badges{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
+  .badge{border:1px solid var(--line);border-radius:999px;padding:4px 8px;background:#fff;font-weight:800;font-size:12px}
+  .badge.safe{background:#ecfdf5;border-color:#86efac}
+  .badge.warn{background:#fff7d6;border-color:#fbbf24}
+  .badge.ng{background:#fee2e2;border-color:#fca5a5}
+  .distance{margin-left:auto;color:#6b6052;font-weight:800}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#2b261f;text-decoration:none;font-weight:800}
+  .btn[aria-disabled="true"]{opacity:.55; pointer-events:none}
+  .fav{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-weight:800;cursor:pointer}
+  .fav input{display:none}
+  .fav .heart{transition:transform .15s}
+  .fav[data-on="1"]{background:#fff1bf;border-color:#ffd166}
+  .fav[data-on="1"] .heart{transform:scale(1.15)}
+  .rating{color:#6b6052;font-weight:800}
+</style>
+
+<div class="page">
+  <section class="hero" aria-label="検索と地図">
+   
+  </section>
+
+  <!-- 上部・固定マップ -->
+  <div class="map-box">
+    <div id="map" aria-label="Map"></div>
+    <div class="legend" aria-hidden="true">
+      <span class="lg"><i id="lg-ok"></i>安全</span>
+      <span class="lg"><i id="lg-warn"></i>注意</span>
+      <span class="lg"><i id="lg-ng"></i>NG</span>
+      <span class="lg"><i id="lg-p"></i>未判定</span>
+    </div>
+    <div class="map-controls">
+      <button class="mc-btn" id="btn-locate">現在地</button>
+      <button class="mc-btn" id="btn-reset">全体表示</button>
+    </div>
+  </div>
+
+  <!-- フィルタ -->
+  <div class="toolbar" role="group" aria-label="フィルタ">
+    <button class="chip" data-filter="all" aria-pressed="true">すべて</button>
+    <button class="chip" data-filter="ok" aria-pressed="false">安全</button>
+    <button class="chip" data-filter="warn" aria-pressed="false">注意</button>
+    <button class="chip" data-filter="ng" aria-pressed="false">NG</button>
+
+    <span style="margin-left:6px;align-self:center;color:#6b6052;font-weight:800">距離</span>
+    <button class="chip distance" data-range="0" aria-pressed="true">すべて</button>
+    <button class="chip distance" data-range="1" aria-pressed="false">1km</button>
+    <button class="chip distance" data-range="3" aria-pressed="false">3km</button>
+    <button class="chip distance" data-range="5" aria-pressed="false">5km</button>
+
+    <button class="chip toggle" id="btn-sort-near" aria-pressed="false" style="margin-left:auto">近い順</button>
+  </div>
+
+  <!-- カード -->
+  <div class="cards" id="cards">
+    {% for s in stores %}
+      {% set _id =
+        (s.id if s.id is defined else
+        ('id' in s and s['id']) or
+        ('店舗ID' in s and s['店舗ID']) or
+        ('store_id' in s and s['store_id']) or
+        ('sid' in s and s['sid']) or
+        ('ID' in s and s['ID'])) %}
+      {% set _name = s.name if s.name is defined else (s['店舗名'] if '店舗名' in s else '') %}
+      {% set _addr = s.address if s.address is defined else (s['住所'] if '住所' in s else '') %}
+      {% set _cat  = s.category if s.category is defined else (s['カテゴリ'] if 'カテゴリ' in s else '') %}
+      {% set _lat  = s.lat if s.lat is defined else (s['lat'] if 'lat' in s else s.get('緯度')) %}
+      {% set _lng  = s.lng if s.lng is defined else (s['lng'] if 'lng' in s else s.get('経度')) %}
+      {% set _open = s.open if s.open is defined else (s['open'] if 'open' in s else s.get('開店')) %}
+      {% set _close = s.close if s.close is defined else (s['close'] if 'close' in s else s.get('閉店')) %}
+      {% set _closed = s.closed if s.closed is defined else (s['closed'] if 'closed' in s else s.get('定休日')) %}
+      {% set _photo = s.photo_url if s.photo_url is defined else (s['写真URL'] if '写真URL' in s else None) %}
+      {% set _rating = s.rating if s.rating is defined else (s['rating'] if 'rating' in s else None) %}
+      {% set _rcount = s.reviews_count if s.reviews_count is defined else (s['reviews_count'] if 'reviews_count' in s else None) %}
+      {% set _menu = s.menu_url if s.menu_url is defined else (s['メニューURL'] if 'メニューURL' in s else None) %}
+      {% set _insta = s.instagram if s.instagram is defined else (s['InstagramURL'] if 'InstagramURL' in s else None) %}
+      {% set _reserve = s.reserve_url if s.reserve_url is defined else (s['ReservationURL'] if 'ReservationURL' in s else None) %}
+      {% set _fav = s.favorited if s.favorited is defined else (s['favorited'] if 'favorited' in s else 0) %}
+
+      <article class="card"
+        data-id="{{ _id if _id is not none else '' }}"
+        data-name="{{ _name }}"
+        data-address="{{ _addr }}"
+        data-category="{{ _cat }}"
+        data-lat="{{ _lat }}"
+        data-lng="{{ _lng }}"
+        data-open="{{ _open }}"
+        data-close="{{ _close }}"
+        data-closed="{{ _closed }}"
+        data-safe="">
+        <div class="ph">
+          {% if _photo %}
+            <img src="{{ _photo }}" alt="{{ _name }} の写真">
+          {% else %}
+            📷
+          {% endif %}
+        </div>
+        <div>
+          <div class="title">{{ _name }}</div>
+          <div class="meta">{{ _cat }}・{{ _addr }}</div>
+
+          <div class="badges">
+            <span class="badge" data-role="safe-label">更新: 計測中</span>
+            <span class="badge" data-role="trust-label">信頼度: －</span>
+            {% if _rating %}
+              <span class="rating">★ {{ '%.1f' % _rating }}{% if _rcount %} / {{ _rcount }}件{% endif %}</span>
+            {% endif %}
+            <label class="fav" data-on="{{ 1 if _fav else 0 }}">
+              <input type="checkbox" {% if _fav %}checked{% endif %}>
+              <span class="heart" aria-hidden>❤️</span>
+              <span data-role="fav-text">{{ 'お気に入り' if not _fav else 'お気に入り済み' }}</span>
+            </label>
+            <span class="distance" data-distance>— km</span>
+          </div>
+
+          <div class="actions">
+            {% if _id %}
+              <a class="btn" href="{{ url_for('store_detail', store_id=_id) }}">詳細</a>
+              <a class="btn" href="{{ url_for('allergy', store_id=_id) }}">アレルギー表</a>
+            {% else %}
+              <span class="btn" aria-disabled="true">詳細</span>
+              <span class="btn" aria-disabled="true">アレルギー表</span>
+            {% endif %}
+            {% if _menu %}<a class="btn" href="{{ _menu }}" target="_blank" rel="noopener">メニュー</a>{% endif %}
+            {% if _insta %}<a class="btn" href="{{ _insta }}" target="_blank" rel="noopener">Instagram</a>{% endif %}
+            {% if _reserve %}<a class="btn" href="{{ _reserve }}" target="_blank" rel="noopener">予約</a>{% endif %}
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // CSRF（お気に入り用）
+  window.CSRF_TOKEN = "{{ csrf_token() }}";
+</script>
+
+<script>
+/* ====== Google Maps 初期化 & マーカー制御（上部固定マップ + 分かりやすいピン） ====== */
+let map, _bounds, _userMarker, _userCircle, _markers=[];
+const cards=[...document.querySelectorAll('.card[data-id]')];
+
+function pinSVG(safe, size){
+  const palette = {
+    ok:{base:'#10b981', dark:'#065f46', glyph:'✓'},
+    warn:{base:'#f59e0b', dark:'#b45309', glyph:'!'},
+    ng:{base:'#ef4444', dark:'#991b1b', glyph:'×'},
+    pending:{base:'#9ca3af', dark:'#6b7280', glyph:'…'}
+  };
+  const p = palette[safe] || palette.pending;
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size*1.4}" viewBox="0 0 40 56">
+    <defs><filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity=".25"/></filter></defs>
+    <g filter="url(#shadow)">
+      <path d="M20 54c8-12 18-20 18-32A18 18 0 1 0 2 22c0 12 10 20 18 32z" fill="${p.base}" stroke="#fff" stroke-width="3" />
+      <circle cx="20" cy="22" r="9" fill="#fff" opacity=".9"/>
+      <text x="20" y="26" text-anchor="middle" font-size="16" font-weight="700" font-family="Inter, system-ui" fill="${p.dark}">${p.glyph}</text>
+    </g>
+  </svg>`;
+}
+function makeIcon(safe, size){
+  const svg = pinSVG(safe, size);
+  return { url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg),
+           scaledSize:new google.maps.Size(size, size*1.4),
+           anchor:new google.maps.Point(size/2, size*1.35) };
+}
+function setMarkerScale(mk, size){
+  const safe = (mk._card?.dataset.safe || 'pending').toLowerCase();
+  mk.setIcon(makeIcon(safe, size));
+  mk.setZIndex(size>=40 ? 999 : 1);
+}
+
+function initMap(){
+  const center = { lat: 35.681236, lng: 139.767125 };
+  map = new google.maps.Map(document.getElementById('map'), {
+    center, zoom: 12, mapTypeControl:false, streetViewControl:false, fullscreenControl:false
+  });
+  _bounds = new google.maps.LatLngBounds();
+
+  // 凡例ピン
+  ['ok','warn','ng','pending'].forEach((k)=>{
+    const id = k==='pending'?'lg-p':'lg-'+k;
+    const el = document.getElementById(id);
+    if(el) el.style.backgroundImage = `url(${ 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(pinSVG(k,14)) })`;
+  });
+
+  // マーカー生成
+  cards.forEach((el)=>{
+    const lat = parseFloat(el.dataset.lat), lng = parseFloat(el.dataset.lng);
+    if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const pos = {lat, lng};
+    const mk = new google.maps.Marker({
+      position: pos, map, icon: makeIcon('pending', 28), title: el.dataset.name || ''
+    });
+    mk._card = el;
+    _markers.push(mk);
+    _bounds.extend(pos);
+
+    mk.addListener('click', ()=>{
+      try{
+        el.scrollIntoView({behavior:'smooth', block:'start'});
+        highlightCard(el, true);
+        panMapToCard(el);
+        mk.setAnimation(google.maps.Animation.BOUNCE);
+        setTimeout(()=>mk.setAnimation(null), 700);
+      }catch(_){}
+    });
+  });
+
+  if(!_bounds.isEmpty()) map.fitBounds(_bounds);
+
+  // カード → マーカー強調
+  cards.forEach((el)=>{
+    el.addEventListener('mouseenter', ()=> highlightCard(el, true));
+    el.addEventListener('mouseleave', ()=> highlightCard(el, false));
+    el.addEventListener('focusin',   ()=> highlightCard(el, true));
+    el.addEventListener('focusout',  ()=> highlightCard(el, false));
+    el.addEventListener('click',     ()=> panMapToCard(el));
+  });
+
+  // 現在地・全体表示
+  document.getElementById('btn-locate').addEventListener('click', locateMe);
+  document.getElementById('btn-reset').addEventListener('click', ()=>{ if(!_bounds.isEmpty()) map.fitBounds(_bounds); });
+}
+window.initMap = initMap;
+
+function markerOfCard(card){ return _markers.find(m=>m._card===card); }
+function highlightCard(card, on){
+  card.classList.toggle('is-hover', !!on);
+  const mk = markerOfCard(card);
+  if(mk) setMarkerScale(mk, on?40:28);
+}
+window.panMapToCard = function(card){
+  const mk = markerOfCard(card); if(!mk) return;
+  map.panTo(mk.getPosition()); map.setZoom(Math.max(map.getZoom(), 15));
+  setMarkerScale(mk, 40);
+  setTimeout(()=>setMarkerScale(mk, 28), 900);
+};
+window.updateMarkersVisibility = function(){
+  _markers.forEach(m=>m.setVisible(!m._card.hidden));
+};
+</script>
+<script async src="https://maps.googleapis.com/maps/api/js?key={{ google_api_key or GOOGLE_MAPS_API_KEY }}&callback=initMap"></script>
+
+<script>
+/* ====== /api/safety 反映 ====== */
+(function(){
+  const lang = window.LumiLang?.get?.() || 'ja';
+  const T = (ja,en)=> (lang==='en' ? (en||ja) : ja);
+
+  async function load(card){
+    const id=card.dataset.id; if(!id) return;
+    try{
+      const r = await fetch(`/api/safety/${encodeURIComponent(id)}`, { credentials:'same-origin' });
+      if(!r.ok) throw 0;
+      const j = await r.json();
+      card.dataset.safe = (j.safe||'').toLowerCase();
+      const safeEl = card.querySelector('[data-role="safe-label"]');
+      const trustEl = card.querySelector('[data-role="trust-label"]');
+      if(safeEl){
+        if(j.safe==='ok'){ safeEl.className='badge safe'; safeEl.textContent=T('安全','Safe'); }
+        else if(j.safe==='warn'){ safeEl.className='badge warn'; safeEl.textContent=T('注意','Caution'); }
+        else if(j.safe==='ng'){ safeEl.className='badge ng'; safeEl.textContent='NG'; }
+        else { safeEl.className='badge'; safeEl.textContent=T('更新: 計測中','Checking'); }
+      }
+      if(trustEl && j.trust != null){
+        const lv = j.trust;
+        trustEl.textContent = lv>=70 ? T('信頼度: 高','Trust: High')
+                 : lv>=40 ? T('信頼度: 中','Trust: Mid')
+                          : T('信頼度: 低','Trust: Low');
+      }
+      const mk = markerOfCard(card); if(mk) setMarkerScale(mk, 28);
+    }catch(e){}
+  }
+  const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ load(e.target); io.unobserve(e.target); } }),{rootMargin:'200px'});
+  document.querySelectorAll('.card[data-id]').forEach(c=>io.observe(c));
+})();
+</script>
+
+<script>
+/* ====== お気に入りトグル ====== */
+(function(){
+  async function toggle(storeId, wantOn){
+    try{
+      const r = await fetch('/api/favorites/toggle', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':(window.CSRF_TOKEN||'')},
+        body: JSON.stringify({ store_id: storeId, on: wantOn ? 1 : 0 })
+      });
+      if(r.ok) return await r.json();
+    }catch(e){}
+    try{
+      const fd = new FormData(); fd.append('csrf_token', window.CSRF_TOKEN||''); fd.append('store_id', storeId);
+      const r = await fetch('/favorites/toggle', { method:'POST', body: fd });
+      if(r.ok) return await r.json();
+    }catch(e){}
+    return {ok:false};
+  }
+  document.getElementById('cards')?.addEventListener('click', async (ev)=>{
+    const lab = ev.target?.closest('.fav'); if(!lab) return;
+    const card = lab.closest('.card'); const id = card?.dataset.id; if(!id) return;
+    const now = lab.getAttribute('data-on') === '1'; const next = !now;
+
+    lab.setAttribute('data-on', next ? '1':'0');
+    const txt = lab.querySelector('[data-role="fav-text"]');
+    if(txt) txt.textContent = next ? (window.LumiLang?.get?.()==='en' ? 'Favorited':'お気に入り済み')
+                                   : (window.LumiLang?.get?.()==='en' ? 'Favorite':'お気に入り');
+    const res = await toggle(id, next);
+    if(!res || res.ok===false){
+      lab.setAttribute('data-on', now ? '1':'0');
+      if(txt) txt.textContent = now ? (window.LumiLang?.get?.()==='en' ? 'Favorited':'お気に入り済み')
+                                    : (window.LumiLang?.get?.()==='en' ? 'Favorite':'お気に入り');
+    }
+  });
+})();
+</script>
+
+<script>
+/* ====== 検索・距離フィルタ・近い順 ====== */
+(function(){
+  const chips=[...document.querySelectorAll('.chip[data-filter]')];
+  const rangeChips=[...document.querySelectorAll('.chip.distance')];
+  const cards=[...document.querySelectorAll('.card[data-id]')];
+  const container=document.getElementById('cards');
+  let qText='', qSafe='all', rangeKm=0, sortNear=false;
+
+  const hitText = (c)=> !qText || ((c.dataset.name+' '+c.dataset.address+' '+c.dataset.category).toLowerCase().includes(qText));
+  const hitSafe = (c)=> qSafe==='all' || (c.dataset.safe||'').toLowerCase()===qSafe;
+  const hitRange = (c)=> rangeKm<=0 || !c.dataset.distanceKm || parseFloat(c.dataset.distanceKm) <= rangeKm + 1e-6;
+
+  function apply(){
+    cards.forEach(c=>{
+      const ok = hitText(c) && hitSafe(c) && hitRange(c);
+      c.hidden=!ok;
+    });
+    if(sortNear){
+      const toSort=[...cards].filter(c=>!c.hidden && c.dataset.distanceKm);
+      toSort.sort((a,b)=>(parseFloat(a.dataset.distanceKm||'9e9') - parseFloat(b.dataset.distanceKm||'9e9')));
+      toSort.forEach(el=>container.appendChild(el));
+    }
+    try{ window.updateMarkersVisibility && window.updateMarkersVisibility(); }catch(e){}
+  }
+
+  addEventListener('lumi:search', (e)=>{ qText=(e.detail||'').trim().toLowerCase(); apply(); });
+
+  chips.forEach(ch=>{
+    ch.addEventListener('click', ()=>{
+      chips.forEach(x=>x.setAttribute('aria-pressed','false'));
+      ch.setAttribute('aria-pressed','true');
+      qSafe = ch.dataset.filter;
+      apply();
+    });
+  });
+  rangeChips.forEach(ch=>{
+    ch.addEventListener('click', ()=>{
+      rangeChips.forEach(x=>x.setAttribute('aria-pressed','false'));
+      ch.setAttribute('aria-pressed','true');
+      rangeKm = parseFloat(ch.dataset.range||'0');
+      apply();
+    });
+  });
+  const btnSort=document.getElementById('btn-sort-near');
+  btnSort.addEventListener('click', ()=>{ sortNear=!sortNear; btnSort.setAttribute('aria-pressed', sortNear?'true':'false'); apply(); });
+
+  window._applySearchFilters = apply;
+})();
+</script>
+
+<script>
+/* ====== 現在地・距離計算 ====== */
+(function(){
+  const toRad = (d)=> d*Math.PI/180;
+  function haversine(lat1,lng1,lat2,lng2){
+    const R=6371; const dLat=toRad(lat2-lat1); const dLng=toRad(lng2-lng1);
+    const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); // km
+  }
+
+  async function setDistance(my){
+    document.querySelectorAll('.card[data-lat][data-lng]').forEach(c=>{
+      const la=parseFloat(c.dataset.lat), ln=parseFloat(c.dataset.lng);
+      if(Number.isFinite(la) && Number.isFinite(ln)){
+        const km = haversine(my.lat, my.lng, la, ln);
+        c.dataset.distanceKm = km.toFixed(3);
+        const el = c.querySelector('[data-distance]');
+        if(el) el.textContent = `${km.toFixed(km<10?2:1)} km`;
+      }
+    });
+    try{ window._applySearchFilters && window._applySearchFilters(); }catch(e){}
+  }
+
+  function drawMyLocation(pos, accuracy){
+    if(!_userMarker){
+      _userMarker = new google.maps.Marker({
+        position: pos, map, title:'現在地',
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor:'#3b82f6', fillOpacity:1, strokeColor:'#fff', strokeWeight:2 }
+      });
+    }else{ _userMarker.setPosition(pos); }
+    if(!_userCircle){
+      _userCircle = new google.maps.Circle({
+        strokeColor:'#60a5fa', strokeOpacity:0.6, strokeWeight:1,
+        fillColor:'#93c5fd', fillOpacity:0.15, map, center:pos, radius: accuracy || 80
+      });
+    }else{ _userCircle.setCenter(pos); _userCircle.setRadius(accuracy||80); }
+  }
+
+  function locate(){
+    if(!('geolocation' in navigator)){ alert('位置情報が利用できません'); return; }
+    navigator.geolocation.getCurrentPosition((p)=>{
+      const pos = { lat:p.coords.latitude, lng:p.coords.longitude };
+      drawMyLocation(pos, p.coords.accuracy);
+      map.panTo(pos); map.setZoom(Math.max(map.getZoom(), 14));
+      setDistance(pos);
+    }, (err)=>{ console.warn('Geolocation error', err); alert('現在地の取得に失敗しました'); }, { enableHighAccuracy:true, timeout:8000, maximumAge:60000 });
+  }
+
+  document.getElementById('btn-locate').addEventListener('click', locate);
+  setTimeout(()=>{ try{ locate(); }catch(e){} }, 600);
+})();
+</script>
+{% endblock %}

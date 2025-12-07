@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main style="max-width:720px; margin:16px auto 64px; padding:0 16px;">
+  <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+    <a class="btn" href="{{ url_for('store_detail', store_id=store_id) }}">← 店舗ページへ</a>
+    <h1 style="margin:0; font-weight:900;">{{ store['店舗名'] or store.get('name') }}｜お知らせを投稿</h1>
+  </div>
+
+  <form method="post" action="{{ url_for('announce_new', store_id=store_id) }}"
+        style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label style="display:block; margin-bottom:10px;">
+      <div style="color:#6b7280;">タイトル（必須）</div>
+      <input name="title" required style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+    </label>
+
+    <label style="display:block; margin-bottom:10px;">
+      <div style="color:#6b7280;">本文（任意）</div>
+      <textarea name="body" rows="6" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;"></textarea>
+    </label>
+
+    <label style="display:block; margin-bottom:10px;">
+      <div style="color:#6b7280;">関連リンクURL（任意）</div>
+      <input name="link_url" type="url" placeholder="https://..."
+             style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+    </label>
+
+    <div style="display:flex; gap:8px;">
+      <button class="btn" type="submit">投稿する</button>
+      <a class="btn" href="{{ url_for('store_detail', store_id=store_id) }}">キャンセル</a>
+    </div>
+  </form>
+</main>
+{% endblock %}

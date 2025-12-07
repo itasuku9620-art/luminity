@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}通報一覧{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:1100px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:1rem;">通報一覧</h1>
+
+  <form method="get" action="{{ url_for('admin_reports') }}"
+        class="card"
+        style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;background:#fff;border-radius:14px;padding:.75rem 1rem;box-shadow:0 6px 16px rgba(0,0,0,.06);margin-bottom:1rem;">
+    <select name="status" style="padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+      <option value="open"   {% if status=='open' %}selected{% endif %}>未処理</option>
+      <option value="closed" {% if status=='closed' %}selected{% endif %}>処理済み</option>
+      <option value="all"    {% if status=='all' %}selected{% endif %}>すべて</option>
+    </select>
+
+    <select name="kind" style="padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+      <option value="all"     {% if kind=='all' %}selected{% endif %}>すべての種別</option>
+      <option value="store"   {% if kind=='store' %}selected{% endif %}>店舗</option>
+      <option value="post"    {% if kind=='post' %}selected{% endif %}>投稿</option>
+      <option value="comment" {% if kind=='comment' %}selected{% endif %}>コメント</option>
+      <option value="user"    {% if kind=='user' %}selected{% endif %}>ユーザー</option>
+      <option value="other"   {% if kind=='other' %}selected{% endif %}>その他</option>
+    </select>
+
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="理由 / メモ / 対象ID を検索"
+           style="flex:1;min-width:260px;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+
+    <select name="sort" style="padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+      <option value="new" {% if sort=='new' %}selected{% endif %}>新しい順</option>
+      <option value="old" {% if sort=='old' %}selected{% endif %}>古い順</option>
+    </select>
+
+    <input type="number" name="limit" value="{{ limit or 200 }}" min="1" max="1000"
+           style="width:7rem;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+
+    <button class="btn" type="submit"
+            style="padding:.6rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;font-weight:700;">
+      検索
+    </button>
+  </form>
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);overflow-x:auto;">
+    <table style="width:100%;min-width:980px;border-collapse:collapse;">
+      <thead style="background:#fff7e0;">
+        <tr>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ID</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">種別/対象</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">理由</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">メモ</th>
+          <th style="text-align:center;padding:.6rem .8rem;border-bottom:1px solid #eee;">状態</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">作成</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows and rows|length>0 %}
+          {% for r in rows %}
+          <tr>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;">{{ r.id }}</td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;">
+              {{ r.kind or '—' }}{% if r.target_id %} #{{ r.target_id }}{% endif %}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {{ r.reason or '' }}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {{ r.note or '' }}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;text-align:center;">
+              {% if r.status == 'closed' %}
+                <span class="badge" style="background:#e8f5e9;color:#2e7d32;">済</span>
+              {% else %}
+                <span class="badge" style="background:#fff3cd;color:#8a6d3b;">未</span>
+              {% endif %}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;">{{ r.created_at or '—' }}</td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;white-space:nowrap;">
+              <form method="post" action="{{ url_for('admin_reports_update', status=status, kind=kind, q=q, sort=sort, limit=limit) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="id" value="{{ r.id }}">
+                {% if r.status == 'closed' %}
+                  <input type="hidden" name="action" value="reopen">
+                  <button class="btn" type="submit" style="padding:.35rem .7rem;border:1px solid #ddd;border-radius:10px;background:#fff;">再開</button>
+                {% else %}
+                  <input type="hidden" name="action" value="resolve">
+                  <button class="btn" type="submit" style="padding:.35rem .7rem;border:1px solid #ddd;border-radius:10px;background:#fff;">解決</button>
+                {% endif %}
+              </form>
+              <form method="post" action="{{ url_for('admin_reports_update', status=status, kind=kind, q=q, sort=sort, limit=limit) }}" style="display:inline;margin-left:.3rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="id" value="{{ r.id }}">
+                <input type="hidden" name="action" value="note">
+                <input type="text" name="note" placeholder="メモ追記" style="width:12rem;padding:.3rem .45rem;border:1px solid #ddd;border-radius:8px;">
+                <button class="btn" type="submit" style="padding:.35rem .7rem;margin-left:.3rem;border:1px solid #ddd;border-radius:10px;background:#fff;">保存</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="7" style="padding:1rem;color:#777;text-align:center;">該当の通報はありません。</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      ← ダッシュボードに戻る
+    </a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main style="max-width:1080px; margin:16px auto 64px; padding:0 16px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+    <h1 style="margin:0; font-weight:900;">通報キュー</h1>
+    <form method="get" action="{{ url_for('admin_reports') }}">
+      <select name="status" onchange="this.form.submit()" style="padding:6px 8px; border:1px solid #e5e7eb; border-radius:10px;">
+        {% for s in ['open','triaged','done','ignored',''] %}
+          <option value="{{ s }}" {% if status==s %}selected{% endif %}>{{ s or 'すべて' }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  {% if rows %}
+    <div style="display:grid; gap:10px;">
+      {% for r in rows %}
+        <div style="border:1px solid #e5e7eb; border-radius:12px; background:#fff; padding:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <strong>#{{ r['id'] }}</strong>
+              <span style="color:#6b7280;">{{ r['created_at'] }}</span>
+            </div>
+            <form method="post" action="{{ url_for('admin_reports_update', rid=r['id']) }}" style="display:flex; gap:6px; align-items:center;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <select name="status" style="padding:6px 8px; border:1px solid #e5e7eb; border-radius:10px;">
+                {% for s in ['open','triaged','done','ignored'] %}
+                  <option value="{{ s }}" {% if r['status']==s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn" type="submit">更新</button>
+            </form>
+          </div>
+          <div style="margin-top:6px;">
+            <div>対象：
+              {% if r['kind']=='store' %}
+                店舗 <a href="{{ url_for('store_detail', store_id=r['target_id']) }}">/store/{{ r['target_id'] }}</a>
+              {% elif r['kind']=='post' %}
+                投稿 <a href="{{ url_for('post_detail', post_id=r['target_id']) }}">/p/{{ r['target_id'] }}</a>
+              {% elif r['kind']=='allergy' %}
+                アレルギー表 <a href="{{ url_for('allergy', store_id=r['target_id']) }}">/allergy/{{ r['target_id'] }}</a>
+              {% endif %}
+            </div>
+            <div>理由：{{ r['reason'] }}</div>
+            {% if r['body'] %}
+              <div style="margin-top:6px; white-space:pre-wrap;">{{ r['body'] }}</div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="color:#6b7280;">通報はありません。</p>
+  {% endif %}
+</main>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}アレルギー表 | {{ super() }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+  /* ===== 見た目・レイアウト ===== */
+  :root{
+    --grid:#e7ecf0;
+    --ok:#16a34a;   /* 緑 */
+    --ng:#ef4444;   /* 赤 */
+    --na:#9aa3af;
+    --hi:#fff7e6;   /* ユーザー対象列のハイライト */
+    --menu-col:240px; /* 左のメニュー列 幅 */
+    --data-col:110px; /* 各アレルゲン列 幅（ボタンで変えたければここを更新） */
+  }
+
+  .table-wrap{
+    border:1px solid var(--grid);
+    border-radius:12px;
+    overflow:auto;
+    background:#fff;
+  }
+
+  table.sheet{
+    border-collapse:separate;
+    border-spacing:0;
+    width:100%;
+    table-layout:fixed;   /* ▼ colgroup の幅指定を有効化 */
+  }
+
+  /* 列幅（colgroup） */
+  table.sheet col.menu-col{ width:var(--menu-col); }
+  table.sheet col.data-col{ width:var(--data-col); }
+
+  th,td{
+    border-bottom:1px solid var(--grid);
+    border-right:1px solid var(--grid);
+    padding:10px 12px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    background-clip:padding-box;  /* スクロール時の罫線欠け軽減 */
+  }
+
+  thead th{ position:sticky; top:0; z-index:5; background:#fff; }
+  tbody th{ position:sticky; left:0; z-index:6; background:#fff; }
+  thead th.sticky-corner{ left:0; z-index:7; outline:1px solid var(--grid); }
+
+  .col-menu{ font-weight:800; }
+  .col-aller.hi{ background:var(--hi); } /* マイアレルゲン列のハイライト */
+
+  .mark{ text-align:center; font-weight:800; }
+  .mark.ok{ color:var(--ng); }  /* ◯＝使用 → 赤で注意喚起 */
+  .mark.ng{ color:var(--ok); }  /* ✕＝不使用 → 緑で安心 */
+  .mark.na{ color:var(--na); }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="margin:10px 0 14px">アレルギー表</h1>
+
+<div class="table-wrap" role="region" aria-label="アレルギー表（横スクロール可）">
+  <table class="sheet">
+    <!-- ▼ 列幅を固定するための colgroup -->
+    <colgroup>
+      <col class="menu-col">
+      {% for _ in allergens %}<col class="data-col">{% endfor %}
+    </colgroup>
+
+    <thead>
+      <tr>
+        <th class="col-menu sticky-corner">メニュー</th>
+        {% for a in allergens %}
+          <th class="col-aller {% if user_allergens and a in user_allergens %}hi{% endif %}">{{ a }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+        <tr>
+          <th class="col-menu">{{ r.menu }}</th>
+          {% for a in allergens %}
+            {% set v = r.get(a) or '－' %}
+            {% set cls = 'ok' if v=='◯' else ('ng' if v=='✕' else 'na') %}
+            <td class="mark {{ cls }}">{{ v }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p style="margin-top:8px;color:#6b7280;font-size:12px">
+  凡例：<span class="mark ng">✕＝不使用</span> / <span class="mark ok">◯＝使用</span> / <span class="mark na">－＝不明</span>
+</p>
+<a class="btn" href="{{ url_for('report_new') }}?kind=allergy&id={{ store.id }}">アレルギー表の誤りを報告</a>
+
+{% endblock %}

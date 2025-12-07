@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main style="max-width:1080px; margin:16px auto 64px; padding:0 16px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+    <div>
+      <a class="btn" href="{{ url_for('store_detail', store_id=store_id) }}">← 店舗ページ</a>
+    </div>
+    <a class="btn" href="{{ url_for('post_new') }}?store={{ store_id }}">この店に投稿</a>
+  </div>
+
+  <h1 style="font-weight:900; margin:0 0 8px;">{{ store['店舗名'] or store.get('name') }} の投稿</h1>
+
+  {% if posts %}
+    <div style="display:grid; grid-template-columns:repeat(12,1fr); gap:12px;">
+      {% for p in posts %}
+      <a href="{{ url_for('post_detail', post_id=p['id']) }}"
+         style="grid-column: span 4 / span 4; text-decoration:none; color:inherit; border:1px solid #e5e7eb; border-radius:12px; background:#fff; overflow:hidden;">
+        {% if p['first_photo'] %}
+          <img src="{{ url_for('static', filename=p['first_photo']) }}" alt=""
+               style="width:100%; aspect-ratio:4/3; object-fit:cover;">
+        {% endif %}
+        <div style="padding:10px;">
+          <div style="font-weight:900;">{{ p['rating']|stars }}</div>
+          <div style="color:#6b7280; font-size:12px;">{{ p['created_at'] }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="color:#6b7280;">まだこの店の投稿はありません。最初の投稿をしてみませんか？</p>
+    <a class="btn" href="{{ url_for('post_new') }}?store={{ store_id }}">この店に投稿</a>
+  {% endif %}
+</main>
+{% endblock %}

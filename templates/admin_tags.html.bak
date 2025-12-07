@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}ハッシュタグ管理{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:1000px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:1rem;">ハッシュタグ管理</h1>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <ul class="flash-list" style="margin:0 0 1rem 0;padding-left:1rem;">
+        {% for cat, msg in messages %}
+          <li class="flash-{{cat}}">{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <!-- 検索 -->
+  <form method="get" action="{{ url_for('admin_tags') }}"
+        class="card" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;background:#fff;border-radius:14px;padding:.75rem 1rem;box-shadow:0 6px 16px rgba(0,0,0,.06);margin-bottom:1rem;">
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="タグ名を検索（部分一致）"
+           style="flex:1;min-width:260px;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <select name="sort" style="padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+      <option value="uses_desc" {% if sort=='uses_desc' %}selected{% endif %}>使用数が多い順</option>
+      <option value="name_asc"  {% if sort=='name_asc'  %}selected{% endif %}>名前順</option>
+    </select>
+    <input type="number" name="limit" value="{{ limit or 200 }}" min="1" max="500" style="width:7rem;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <button class="btn" type="submit"
+            style="padding:.6rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;font-weight:700;">
+      検索
+    </button>
+  </form>
+
+  <!-- 操作：リネーム / マージ / 削除 / 件数同期 -->
+  <div class="card" style="background:#fff;border-radius:16px;padding:1rem;box-shadow:0 6px 16px rgba(0,0,0,.06);margin-bottom:1rem;">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+      <!-- rename -->
+      <form method="post" action="{{ url_for('admin_tags') }}" style="display:flex;gap:.4rem;align-items:center;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="rename">
+        <input name="old" type="text" placeholder="old" style="width:10rem;padding:.5rem;border:1px solid #ddd;border-radius:10px;">
+        <span>→</span>
+        <input name="new" type="text" placeholder="new" style="width:10rem;padding:.5rem;border:1px solid #ddd;border-radius:10px;">
+        <button class="btn" type="submit" style="padding:.5rem .9rem;border-radius:10px;background:#fff;border:1px solid #ddd;">リネーム</button>
+      </form>
+
+      <!-- merge -->
+      <form method="post" action="{{ url_for('admin_tags') }}" style="display:flex;gap:.4rem;align-items:center;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="merge">
+        <input name="src" type="text" placeholder="src" style="width:10rem;padding:.5rem;border:1px solid #ddd;border-radius:10px;">
+        <span>→</span>
+        <input name="dst" type="text" placeholder="dst" style="width:10rem;padding:.5rem;border:1px solid #ddd;border-radius:10px;">
+        <button class="btn" type="submit" style="padding:.5rem .9rem;border-radius:10px;background:#fff;border:1px solid #ddd;">マージ</button>
+      </form>
+
+      <!-- delete -->
+      <form method="post" action="{{ url_for('admin_tags') }}" style="display:flex;gap:.4rem;align-items:center;"
+            onsubmit="return confirm('このタグを削除します。よろしいですか？');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="delete">
+        <input name="tag" type="text" placeholder="tag" style="width:10rem;padding:.5rem;border:1px solid #ddd;border-radius:10px;">
+        <button class="btn btn-danger" type="submit" style="padding:.5rem .9rem;border-radius:10px;">削除</button>
+      </form>
+
+      <!-- recalc -->
+      <form method="post" action="{{ url_for('admin_tags') }}" style="display:flex;gap:.4rem;align-items:center;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="recalc">
+        <input name="target" type="text" placeholder="（空で全量）" style="width:12rem;padding:.5rem;border:1px solid #ddd;border-radius:10px;">
+        <button class="btn" type="submit" style="padding:.5rem .9rem;border-radius:10px;background:#fff;border:1px solid #ddd;">件数同期</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 一覧 -->
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead style="background:#fff7e0;">
+        <tr>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">タグ</th>
+          <th style="text-align:right;padding:.6rem .8rem;border-bottom:1px solid #eee;">使用数</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows and rows|length > 0 %}
+          {% for r in rows %}
+          <tr>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">#{{ r.tag }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;text-align:right;">{{ r.uses }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+              <!-- 行内のクイック操作 -->
+              <form method="post" action="{{ url_for('admin_tags') }}" style="display:inline-block;margin-right:.35rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="recalc">
+                <input type="hidden" name="target" value="{{ r.tag }}">
+                <button class="btn" type="submit" style="padding:.4rem .8rem;border-radius:10px;background:#fff;border:1px solid #ddd;">件数同期</button>
+              </form>
+
+              <form method="post" action="{{ url_for('admin_tags') }}" style="display:inline-block;"
+                    onsubmit="return confirm('#{{ r.tag }} を削除します。よろしいですか？');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="tag" value="{{ r.tag }}">
+                <button class="btn btn-danger" type="submit" style="padding:.4rem .8rem;border-radius:10px;">削除</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="3" style="padding:1rem;color:#777;text-align:center;">タグがありません。</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      ← ダッシュボードに戻る
+    </a>
+  </div>
+</section>
+{% endblock %}

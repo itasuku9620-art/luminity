@@ -1,0 +1,45 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin / お知らせ{% endblock %}
+{% block content %}
+<h1>お知らせ</h1>
+<div class="card">
+  <form method="post">
+    <input type="hidden" name="action" value="create">
+    <p>タイトル <input name="title" required> レベル
+      <select name="level"><option>info</option><option>warning</option><option>danger</option></select>
+      有効 <input type="checkbox" name="is_active" checked>
+    </p>
+    <p>開始 <input name="starts_at" placeholder="YYYY-MM-DD HH:MM:SS">
+       終了 <input name="ends_at" placeholder="YYYY-MM-DD HH:MM:SS"></p>
+    <p><textarea name="body" rows="4" cols="80" placeholder="本文..."></textarea></p>
+    <p><button class="primary">作成</button></p>
+  </form>
+</div>
+<div class="card">
+  <table>
+    <tr><th>ID</th><th>タイトル</th><th>レベル</th><th>有効</th><th>開始</th><th>終了</th><th>操作</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.title }}</td>
+      <td><span class="badge">{{ r.level or 'info' }}</span></td>
+      <td>{{ r.is_active }}</td>
+      <td><small class="mono">{{ r.starts_at or '' }}</small></td>
+      <td><small class="mono">{{ r.ends_at or '' }}</small></td>
+      <td>
+        <form class="inline" method="post">
+          <input type="hidden" name="id" value="{{ r.id }}">
+          <input type="hidden" name="action" value="{{ 'deactivate' if r.is_active else 'activate' }}">
+          <button>{{ '無効化' if r.is_active else '有効化' }}</button>
+        </form>
+        <form class="inline" method="post" onsubmit="return confirm('delete?')">
+          <input type="hidden" name="id" value="{{ r.id }}">
+          <input type="hidden" name="action" value="delete">
+          <button>削除</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

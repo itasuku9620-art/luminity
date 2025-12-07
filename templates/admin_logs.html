@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}管理者監査ログ{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:1100px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:1rem;">管理者監査ログ</h1>
+
+  <form method="get" action="{{ url_for('admin_logs') }}"
+        class="card" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;background:#fff;border-radius:14px;padding:.75rem 1rem;box-shadow:0 6px 16px rgba(0,0,0,.06);margin-bottom:1rem;">
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="action / target / UA を検索"
+           style="flex:1;min-width:260px;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <input type="number" name="admin_id" value="{{ admin_id or '' }}" placeholder="admin_id"
+           style="width:9rem;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <input type="number" name="limit" value="{{ limit or 200 }}" min="1" max="1000"
+           style="width:7rem;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <button class="btn" type="submit"
+            style="padding:.6rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;font-weight:700;">
+      検索
+    </button>
+    <a class="btn" href="{{ url_for('admin_logs', q=q, admin_id=admin_id, limit=limit, export='csv') }}"
+       style="padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      CSVエクスポート
+    </a>
+  </form>
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);overflow:auto;">
+    <table style="width:100%;border-collapse:collapse;min-width:960px;">
+      <thead style="background:#fff7e0;">
+        <tr>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ID</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">Admin</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">Action</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">Target</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">Payload</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">IP / UA</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows and rows|length > 0 %}
+          {% for r in rows %}
+          <tr>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ r.id }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ r.admin_id or '-' }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;font-weight:600;">{{ r.action }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ r.target }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;max-width:420px;">
+              <code style="white-space:pre-wrap;word-break:break-word;">{{ r.payload_json }}</code>
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+              <div>{{ r.ip or '-' }}</div>
+              <div style="color:#888;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.ua or '' }}</div>
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ r.created_at }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="7" style="padding:1rem;color:#777;text-align:center;">ログがありません。</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      ← ダッシュボードに戻る
+    </a>
+  </div>
+</section>
+{% endblock %}

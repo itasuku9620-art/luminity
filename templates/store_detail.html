@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ store.get("店舗名") }} | 店舗詳細</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .container { max-width: 960px; margin: 0 auto; padding: 16px; }
+    .card { background:#fff; border-radius:16px; box-shadow:0 6px 16px rgba(0,0,0,.08); padding:16px; }
+    .media { display:grid; grid-template-columns: 240px 1fr; gap:16px; }
+    .media img { width:100%; height:240px; object-fit:cover; border-radius:12px; background:#f6f6f6; }
+    .title { font-size:1.35rem; font-weight:700; display:flex; align-items:center; gap:.5rem; }
+    .badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; font-size:.78rem; font-weight:600; line-height:1.6; }
+    .badge.open { background:#e7f7ec; color:#1e824c; }
+    .badge.closed { background:#fdebec; color:#c0392b; }
+    .meta { color:#666; font-size:.92rem; margin-top:4px; }
+    .stars { color:#f5a623; letter-spacing:1px; }
+    .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .btn { display:inline-flex; align-items:center; gap:.35rem; padding:8px 12px; border-radius:10px; background:#f7f7f7; border:1px solid #eee; text-decoration:none; color:#333; font-weight:600; }
+    .btn:hover { background:#fff8e1; }
+    .btn.primary { background:#ffe07a; border-color:#ffd34a; }
+    .btn.ghost { background:#fff; }
+    .sections { display:grid; grid-template-columns: 1fr; gap:16px; margin-top:16px; }
+    @media (min-width: 768px) { .sections { grid-template-columns: 1fr 1fr; } }
+    .block { background:#fff; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,.05); padding:14px; }
+    .list { margin:0; padding:0; list-style:none; }
+    .list li { margin:6px 0; }
+    .muted { color:#888; font-size:.9rem; }
+    nav.navbar { background:#ffc400; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10; }
+    nav .nav-logo { font-weight:800; color:#222; text-decoration:none; }
+    nav .navbar-right a { color:#222; margin-left:16px; text-decoration:none; font-weight:600; }
+  </style>
+
+  {% macro stars(rating) -%}
+    {% set r = rating or 0 %}
+    {% set full = (r // 1)|int %}
+    {% set half = 1 if (r - full) >= 0.5 else 0 %}
+    {% set empty = 5 - full - half %}
+    <span class="stars" aria-label="平均 {{ '%.1f' % r }} / 5">
+      {% for _ in range(full) %}★{% endfor %}
+      {% if half %}☆{% endif %}
+      {% for _ in range(empty) %}☆{% endfor %}
+    </span>
+  {%- endmacro %}
+</head>
+<body>
+
+  <!-- ナビ -->
+  <nav class="navbar">
+    <a href="/dashboard" class="nav-logo">Luminality</a>
+    <div class="navbar-right">
+      <a href="{{ url_for('search') }}">店舗検索</a>
+      <a href="{{ url_for('mypage') }}">マイページ</a>
+      <a href="{{ url_for('logout') }}">ログアウト</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <article class="card">
+      <div class="media">
+        <div>
+          <img src="{{ store.get('image_url') }}" alt="{{ store.get('店舗名') }}">
+        </div>
+
+        <div>
+          <div class="title">
+            <span>{{ store.get("店舗名") }}</span>
+            <span 
+              id="openBadge"
+              class="badge"
+              data-open="{{ store.get('営業開始','') }}"
+              data-close="{{ store.get('営業終了','') }}"
+              data-closed="{{ store.get('定休日','') }}"
+              title=""
+            >
+              営業状況
+            </span>
+          </div>
+
+          <div class="meta">
+            <span>{{ store.get("カテゴリ") }}</span>
+            {% if store.get("open_hint") %} ・ <span>{{ store.get("open_hint") }}</span>{% endif %}
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            {{ stars(store.get('app_rating') or 0) }}
+            <span class="muted"> {{ '%.1f' % (store.get('app_rating') or 0) }}（{{ store.get('app_review_count') or 0 }}件）</span>
+            <a class="btn ghost" href="{{ url_for('reviews', store_id=store_id) }}">レビューを見る・書く</a>
+          </div>
+
+          <div class="row" style="margin-top:12px;">
+            <form action="{{ url_for('favorite', store_id=store_id) }}" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn">★ お気に入り</button>
+            </form>
+
+            {% if links.menu %}
+              <a class="btn" href="{{ store.get('メニューURL') }}" target="_blank" rel="noopener">メニュー</a>
+            {% endif %}
+            {% if links.instagram %}
+              <a class="btn" href="{{ store.get('InstagramURL') }}" target="_blank" rel="noopener">Instagram</a>
+            {% endif %}
+            {% if links.phone %}
+              <a class="btn" href="tel:{{ store.get('電話番号') }}">電話</a>
+            {% endif %}
+            {% if links.reserve %}
+              <a class="btn primary" href="{{ store.get('ReservationURL') }}" target="_blank" rel="noopener">予約</a>
+            {% endif %}
+            {% if links.official %}
+              <a class="btn" href="{{ store.get('公式サイトURL') }}" target="_blank" rel="noopener">公式サイト</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="sections">
+        <section class="block">
+          <h3 style="margin:0 0 8px;">店舗情報</h3>
+          <ul class="list">
+            <li><strong>住所：</strong>{{ store.get("住所") }}</li>
+            {% if store.get("電話番号") %}<li><strong>電話：</strong><a href="tel:{{ store.get('電話番号') }}">{{ store.get("電話番号") }}</a></li>{% endif %}
+            {% if store.get("カテゴリ") %}<li><strong>カテゴリ：</strong>{{ store.get("カテゴリ") }}</li>{% endif %}
+            {% if is_official %}
+  <span style="display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px;
+               background:#2563eb; color:#fff; font-size:12px; font-weight:700;">公式</span>
+{% endif %}
+
+          </ul>
+        </section>
+
+        <section class="block">
+          <h3 style="margin:0 0 8px;">アレルギー情報</h3>
+          <p class="muted" style="margin:0 0 10px;">
+            アレルギー表は店舗提供資料をもとに表示します。内容の正確性は保証できません。
+          </p>
+          <a class="btn primary" href="{{ url_for('allergy_agreement', store_id=store_id) }}">アレルギー表はこちら</a>
+        </section>
+      </div>
+    </article>
+<!-- ▼▼ 公式お知らせ（3件まで） ▼▼ -->
+<section style="margin-top:16px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+    <h2 style="font-weight:900; margin:0;">店舗からのお知らせ</h2>
+    <div style="display:flex; gap:8px;">
+      <a class="btn" href="{{ url_for('announcements_list', store_id=store_id) }}">すべて見る ({{ anno_count or 0 }})</a>
+      {% if is_official and can_post_announce %}
+
+        <a class="btn" href="{{ url_for('announce_new', store_id=store_id) }}">お知らせを投稿</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if latest_annos %}
+    <div style="display:grid; gap:10px;">
+      {% for a in latest_annos %}
+        <article style="border:1px solid #e5e7eb; border-radius:12px; background:#fff; padding:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <strong>{{ a['title'] }}</strong>
+            <span style="color:#6b7280; font-size:12px;">{{ a['created_at'] }}</span>
+          </div>
+          {% if a['body'] %}
+            <div style="white-space:pre-wrap; margin-top:6px;">{{ a['body'] }}</div>
+          {% endif %}
+          {% if a['link_url'] %}
+            <div style="margin-top:6px;">
+              <a class="btn" href="{{ a['link_url'] }}" target="_blank" rel="noopener">詳しく見る</a>
+            </div>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="color:#6b7280; margin:8px 0 0;">まだお知らせはありません。</p>
+  {% endif %}
+</section>
+<!-- ▲▲ お知らせ 終了 ▲▲ -->
+
+  <!-- ▼▼ みんなの投稿（新着3件） / この店に投稿ボタン：追加ブロック ▼▼ -->
+<section id="store-posts" style="margin-top:16px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+    <h2 style="font-weight:900; margin:0;">みんなの投稿</h2>
+    <a class="btn" href="{{ url_for('report_new') }}?kind=store&id={{ store_id }}">誤情報を報告</a>
+
+    <div style="display:flex; gap:8px;">
+      <a class="btn" href="{{ url_for('post_new') }}?store={{ store_id }}">この店に投稿</a>
+      <a class="btn" href="{{ url_for('store_posts', store_id=store_id) }}">すべて見る ({{ post_count or 0 }})</a>
+    </div>
+  </div>
+
+  {% if latest_posts %}
+    <div style="display:grid; grid-template-columns:repeat(12,1fr); gap:12px;">
+      {% for p in latest_posts %}
+      <a href="{{ url_for('post_detail', post_id=p['id']) }}"
+         style="grid-column: span 4 / span 4; text-decoration:none; color:inherit; border:1px solid #e5e7eb; border-radius:12px; background:#fff; overflow:hidden;">
+        {% if p['first_photo'] %}
+          <img src="{{ url_for('static', filename=p['first_photo']) }}" alt=""
+               style="width:100%; aspect-ratio:4/3; object-fit:cover;">
+        {% endif %}
+        <div style="padding:10px;">
+          <div style="font-weight:900;">{{ p['rating']|stars }}</div>
+          <div style="color:#6b7280; font-size:12px;">{{ p['created_at'] }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="color:#6b7280; margin:8px 0 0;">まだ投稿はありません。</p>
+    <a class="btn" href="{{ url_for('store_claim', store_id=store_id) }}">店舗の方へ：掲載・修正のご依頼</a>
+
+  {% endif %}
+</section>
+<!-- ▲▲ 追加ブロック 終了 ▲▲ -->
+
+  </main>
+
+  <script>
+  (function(){
+    function nowJst(){
+      const p = new Intl.DateTimeFormat('ja-JP',{
+        timeZone:'Asia/Tokyo', weekday:'short', hour:'2-digit', minute:'2-digit', hourCycle:'h23'
+      }).formatToParts(new Date());
+      const h = +p.find(x=>x.type==='hour').value;
+      const m = +p.find(x=>x.type==='minute').value;
+      const wd = (p.find(x=>x.type==='weekday').value||'').charAt(0); // 月火水木金土日 の先頭1文字
+      return { min:h*60+m, wd };
+    }
+    function parseHM(s){
+      s=(s||'').trim();
+      const m=s.match(/^(\d{1,2}):(\d{2})$/);
+      if(!m) return null;
+      const hh=+m[1], mm=+m[2];
+      if(hh>=0 && hh<24 && mm>=0 && mm<60) return hh*60+mm;
+      return null;
+    }
+    function judge(openStr, closeStr, closedStr){
+      const {min, wd} = nowJst();
+      if ((closedStr||'').includes(wd)) return { cls:'holiday', text:'定休日' };
+      const om = parseHM(openStr), cm = parseHM(closeStr);
+      if (om==null || cm==null) return { cls:'closed', text:'要確認' };
+      const openNow = (om < cm) ? (om <= min && min < cm) : (min >= om || min < cm); // 深夜跨ぎ対応
+      return openNow ? { cls:'open', text:'営業中' } : { cls:'closed', text:'営業時間外' };
+    }
+
+    const badge = document.getElementById('openBadge');
+    if (!badge) return;
+
+    const res = judge(badge.dataset.open, badge.dataset.close, badge.dataset.closed);
+    badge.classList.remove('open','closed','holiday');
+    badge.classList.add(res.cls);
+    badge.textContent = res.text;
+    if (badge.dataset.open && badge.dataset.close){
+      badge.title = `${badge.dataset.open}〜${badge.dataset.close}`;
+    }
+  })();
+  </script>
+</body>
+</html>

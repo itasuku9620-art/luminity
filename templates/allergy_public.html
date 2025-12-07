@@ -1,0 +1,14 @@
+<!-- templates/allergy_public.html（最低限の雛形） -->
+<!doctype html><html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>アレルギー表</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta name="robots" content="noindex,nofollow">
+</head><body>
+<main class="container">
+  <h1>アレルギー表</h1>
+  <p class="muted">最終更新: {{ last_updated or "" }}</p>
+  {{ render_allergy_table(data) | safe }}  <!-- 既存の表描画関数/部品を呼ぶ想定 -->
+  <p class="caption">※ 原材料の切替等により実際と異なる可能性があります。</p>
+</main>
+</body></html>

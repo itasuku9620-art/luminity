@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Luminity</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@800;900&family=Shippori+Mincho:wght@800&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg1:#fff4d0; --bg2:#fff9ee; --ink:#2b261f; --y:#ffb300; --o:#f57c00; }
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    body{
+      margin:0; display:grid; place-items:center; background:radial-gradient(60% 45% at 50% 30%, rgba(255,224,130,.5), transparent 65%), linear-gradient(180deg,var(--bg1),var(--bg2));
+      overflow:hidden; font-family:Inter, "Shippori Mincho", system-ui, sans-serif; color:var(--ink);
+    }
+    .sun{
+      width:min(52vmin, 320px); height:min(52vmin, 320px); border-radius:50%;
+      background:conic-gradient(from 0deg, rgba(255,179,0,.18), rgba(245,124,0,.12), rgba(255,224,130,.22), rgba(245,124,0,.12), rgba(255,179,0,.18));
+      filter:blur(12px); position:absolute; inset:0; margin:auto; animation:spin 5.5s linear infinite;
+    }
+    @keyframes spin{ to{ transform:rotate(360deg)} }
+    .logo{
+      position:relative; z-index:2; display:grid; place-items:center; text-align:center;
+      animation:pop 1.2s ease-out forwards;
+    }
+    .mark{
+      width:min(18vmin, 120px); height:min(18vmin, 120px); border-radius:28%;
+      background:radial-gradient(circle at 35% 35%, #fff6d1 0 28%, #ffc44d 28% 60%, #f59f00 60% 100%);
+      box-shadow:0 12px 30px rgba(245,124,0,.25), inset 0 6px 16px rgba(255,255,255,.6);
+      animation:breath 2.8s ease-in-out infinite;
+    }
+    @keyframes breath{ 0%,100%{ transform:scale(1)} 50%{ transform:scale(1.06)} }
+    .name{
+      margin-top:16px; font-weight:900; font-size:min(8vmin,32px);
+      letter-spacing:.04em; background:linear-gradient(180deg,#4a3b2b,#2b261f); -webkit-background-clip:text; color:transparent;
+      font-family:"Shippori Mincho", Inter, system-ui, sans-serif;
+    }
+    @keyframes pop{ from{ transform:translateY(10px); opacity:0 } to{ transform:none; opacity:1 } }
+    .skip{ position:fixed; bottom:20px; right:20px; font-weight:800; text-decoration:none; color:#5a3b00;
+      background:linear-gradient(180deg,#ffe08a,#ffc44d); border:1px solid #ffd166; padding:10px 14px; border-radius:12px; }
+  </style>
+</head>
+<body>
+  <div class="sun" aria-hidden="true"></div>
+  <div class="logo" aria-label="Luminity">
+    <div class="mark" aria-hidden="true"></div>
+    <div class="name">Luminity</div>
+  </div>
+  <a id="skip" class="skip" href="#">スキップ</a>
+
+  <script>
+    (function(){
+      const qs = new URLSearchParams(location.search);
+      const next = qs.get('next') || '/language?next=/login';
+      function go(){ try{ localStorage.setItem('lumi_seen_splash','1'); }catch(e){} location.replace(next); }
+      document.getElementById('skip').setAttribute('href', next);
+      setTimeout(go, 2000); // 2秒後に次へ
+      // クリック等でも先へ
+      document.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') go(); });
+      document.addEventListener('click', go, { once:true });
+    })();
+  </script>
+</body>
+</html>

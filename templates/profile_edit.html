@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}プロフィール編集 | {{ super() }}{% endblock %}
+
+{% block content %}
+<main style="max-width: 880px; margin: 16px auto 64px; padding: 0 16px;">
+  <h1 style="font-weight:900; margin:0 0 12px;">プロフィール編集</h1>
+  <p class="muted">プロフィール画像・名前・メール等を更新します。</p>
+
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('mypage_profile') }}"
+        style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div style="display:grid; grid-template-columns: 180px 1fr; gap:16px;">
+      <!-- 画像 -->
+      <div>
+        <div style="width:160px; height:160px; border-radius:16px; background:#f3f4f6; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+          {% if profile.avatar_url %}
+            <img id="avatar-preview" src="{{ profile.avatar_url }}" alt="avatar" style="width:100%; height:100%; object-fit:cover;">
+          {% else %}
+            <span id="avatar-letter" style="font-size:48px; color:#9aa3af; font-weight:900;">{{ (profile.name or 'G')[:1] }}</span>
+            <img id="avatar-preview" src="" alt="" style="display:none;">
+          {% endif %}
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+          <label class="btn" for="avatar">画像を選ぶ</label>
+          <input id="avatar" type="file" name="avatar" accept=".png,.jpg,.jpeg,.webp" style="display:none;">
+          <label class="btn" style="background:#fff5f5; border-color:#fecaca;">
+            <input type="checkbox" name="remove_avatar" value="1"> 画像を削除
+          </label>
+          <div class="muted">png/jpg/webp、最大 5MB</div>
+        </div>
+      </div>
+
+      <!-- フィールド -->
+      <div style="display:grid; gap:10px;">
+        <label>
+          <div class="muted">名前</div>
+          <input class="input" type="text" name="name" value="{{ profile.name }}" required
+                 style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+        </label>
+        <label>
+          <div class="muted">メール</div>
+          <input class="input" type="email" name="email" value="{{ profile.email }}"
+                 style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+        </label>
+        <label>
+          <div class="muted">電話番号</div>
+          <input class="input" type="tel" name="phone" value="{{ profile.phone }}"
+                 style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+        </label>
+        <label>
+          <div class="muted">ひとこと</div>
+          <textarea name="bio" rows="4" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">{{ profile.bio }}</textarea>
+        </label>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:16px;">
+      <button class="btn" type="submit">保存する</button>
+      <a class="btn" href="{{ url_for('mypage') }}#profile">マイページへ戻る</a>
+    </div>
+  </form>
+</main>
+
+<script>
+  // 画像プレビュー
+  (function(){
+    const file = document.getElementById('avatar');
+    if(!file) return;
+    file.addEventListener('change', ()=>{
+      const [f] = file.files || [];
+      if(!f) return;
+      const url = URL.createObjectURL(f);
+      const img = document.getElementById('avatar-preview');
+      const letter = document.getElementById('avatar-letter');
+      if(letter) letter.style.display = 'none';
+      img.src = url; img.style.display = 'block';
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin / Dashboard{% endblock %}
+{% block head %}ダッシュボード{% endblock %}
+{% block content %}
+
+<!-- KPI -->
+<div class="grid cols-3">
+  <div class="card"><div class="kv"><span>Users total</span><strong>{{ metrics.users_total or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>New users (7d)</span><strong>{{ metrics.users_new_7d or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>Posts</span><strong>{{ metrics.posts_total or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>Comments</span><strong>{{ metrics.comments_total or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>Hidden posts</span><strong>{{ metrics.hidden_posts or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>Hidden comments</span><strong>{{ metrics.hidden_comments or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>Pending claims</span><strong>{{ metrics.pending_claims or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>Active announcements</span><strong>{{ metrics.active_announces or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>Store overrides</span><strong>{{ metrics.overrides or 0 }}</strong></div></div>
+  <div class="card"><div class="kv"><span>Safety overrides</span><strong>{{ metrics.safety_overrides or 0 }}</strong></div></div>
+</div>
+
+<!-- クイック操作 -->
+<div class="card">
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <a class="btn" href="{{ url_for('admin_announcements') }}">Announcements</a>
+    <a class="btn" href="/admin/claims">Claims</a>
+    <a class="btn" href="/admin/posts">Posts</a>
+    <a class="btn" href="/admin/comments">Comments</a>
+    <a class="btn" href="/admin/tags">Tags</a>
+
+    <form class="inline" method="get" onsubmit="location.href='/admin/stores/'+this.store_id.value+'/override'; return false;" style="margin-left:auto">
+      <span class="muted">Store ID</span>
+      <input name="store_id" placeholder="e.g. 1" style="width:120px">
+      <button class="btn primary">Open Overrides</button>
+    </form>
+
+    <form class="inline" method="post" action="/admin/sheets/cache/clear">
+      <button class="btn">Sheets Cache Clear</button>
+    </form>
+    <form class="inline" method="post" action="/admin/sheets/cache/refresh">
+      <button class="btn primary">Sheets Refresh</button>
+    </form>
+    {% if metrics.sheets %}
+    <span class="muted mono">cached: {{ 'yes' if metrics.sheets.cached else 'no' }} / ts={{ metrics.sheets.ts or '-' }}</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Favorites ランキング -->
+<div class="card">
+  <h3 style="margin:0 0 8px">Favorites Top Stores</h3>
+  {% if metrics.favorite_top_stores %}
+  <table>
+    <tr><th>Store ID</th><th>Count</th></tr>
+    {% for r in metrics.favorite_top_stores %}
+      <tr><td>{{ r.store_id }}</td><td>{{ r.count }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p class="muted">データがありません</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin / Store Overrides{% endblock %}
+{% block content %}
+<h1>Store Overrides</h1>
+<div class="card">
+  <p>store_id = <strong>{{ store_id }}</strong></p>
+  <form method="post">
+    key <input name="key" required>
+    value <input name="value" size="60" placeholder='JSON / text'>
+    <button class="primary">Save</button>
+  </form>
+  <p><small class="mono">同じ key は上書き保存されます（JSONでも文字列でも可）。</small></p>
+</div>
+<div class="card">
+  <table><tr><th>key</th><th>value</th><th>updated_at</th></tr>
+  {% for r in rows %}
+    <tr>
+      <td>{{ r.key }}</td>
+      <td><pre style="white-space:pre-wrap">{{ r.value or '' }}</pre></td>
+      <td><small class="mono">{{ r.updated_at or '' }}</small></td>
+    </tr>
+  {% endfor %}
+  </table>
+</div>
+{% endblock %}

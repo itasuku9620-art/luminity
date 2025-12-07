@@ -1,0 +1,65 @@
+# templates/register.html
+'''
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ユーザー登録</title>
+  <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+</head>
+<body>
+  <h1>ユーザー登録</h1>
+  <form method="POST">
+    <label>名前：<input type="text" name="name" required></label><br>
+    <label>メール：<input type="email" name="email" required></label><br>
+    <label>パスワード：<input type="password" name="password" required></label><br>
+    <label>住所：<input type="text" name="address" id="address" required></label><br>
+    <input type="hidden" name="latitude" id="latitude">
+    <input type="hidden" name="longitude" id="longitude">
+
+    <p>アレルゲン：</p>
+    {% for allergen in allergens %}
+      <label><input type="checkbox" name="allergens" value="{{ allergen }}"> {{ allergen }}</label><br>
+    {% endfor %}
+
+    <div id="map" style="width: 100%; height: 300px;"></div><br>
+    <button type="submit">登録</button>
+  </form>
+
+  <script>
+    let map;
+    let marker;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 35.0116, lng: 135.7681 }, // 京都中心
+        zoom: 13,
+      });
+
+      const input = document.getElementById("address");
+      const autocomplete = new google.maps.places.Autocomplete(input);
+      autocomplete.bindTo("bounds", map);
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) return;
+
+        map.setCenter(place.geometry.location);
+        map.setZoom(15);
+
+        if (marker) marker.setMap(null);
+        marker = new google.maps.Marker({
+          map: map,
+          position: place.geometry.location,
+        });
+
+        document.getElementById("latitude").value = place.geometry.location.lat();
+        document.getElementById("longitude").value = place.geometry.location.lng();
+      });
+    }
+
+    window.onload = initMap;
+  </script>
+</body>
+</html>
+'''

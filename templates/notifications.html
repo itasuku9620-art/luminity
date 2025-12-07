@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main style="max-width:800px; margin:16px auto 64px; padding:0 16px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+    <h1 style="margin:0; font-weight:900;">通知</h1>
+    <form method="post" action="{{ url_for('notifications_read_all') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn" type="submit">すべて既読</button>
+    </form>
+  </div>
+
+  {% macro card(n) -%}
+    {% set is_post = (n['kind']=='post') %}
+    {% set href = url_for('post_detail', post_id=n['item_id']) if is_post else url_for('announcements_list', store_id=n['store_id']) %}
+    <div style="border:1px solid #e5e7eb; border-radius:12px; background:#fff; padding:12px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      <a href="{{ href }}" style="text-decoration:none; color:inherit; flex:1;">
+        <div style="font-weight:900;">{{ n['title'] or ('新着' + ('投稿' if is_post else 'お知らせ')) }}</div>
+        <div style="color:#6b7280; font-size:12px;">{{ n['created_at'] }}</div>
+      </a>
+      {% if not n['read_at'] %}
+      <form method="post" action="{{ url_for('notification_read', nid=n['id']) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn" type="submit">既読</button>
+      </form>
+      {% else %}
+      <span class="muted" style="font-size:12px;">既読</span>
+      {% endif %}
+    </div>
+  {%- endmacro %}
+
+  {% if unread %}
+    <h2 style="margin:12px 0 8px; font-weight:900;">未読</h2>
+    <div style="display:grid; gap:8px;">
+      {% for n in unread %} {{ card(n) }} {% endfor %}
+    </div>
+  {% endif %}
+
+  <h2 style="margin:16px 0 8px; font-weight:900;">既読</h2>
+  {% if read %}
+    <div style="display:grid; gap:8px;">
+      {% for n in read %} {{ card(n) }} {% endfor %}
+    </div>
+  {% else %}
+    <p class="muted">既読の通知はありません。</p>
+  {% endif %}
+</main>
+{% endblock %}

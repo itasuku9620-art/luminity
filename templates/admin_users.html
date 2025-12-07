@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}登録ユーザー一覧{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:1100px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:1rem;">登録ユーザー一覧</h1>
+  <p style="color:#666;margin:.25rem 0 1rem;">※ 管理者としてログインしました。</p>
+
+  {# フラッシュ #}
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <ul class="flash-list" style="margin:0 0 1rem 0;padding-left:1rem;">
+        {% for cat, msg in messages %}
+          <li class="flash-{{cat}}">{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {# 検索・絞り込み #}
+  <form method="get" action="{{ url_for('admin_users') }}"
+        class="card"
+        style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;background:#fff;border-radius:14px;padding:.75rem 1rem;box-shadow:0 6px 16px rgba(0,0,0,.06);margin-bottom:1rem;">
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="名前/メールで検索"
+           style="flex:1;min-width:260px;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+
+    <label style="display:flex;align-items:center;gap:.35rem;">
+      <span style="font-size:.9rem;color:#555;">検証</span>
+      <select name="verified" style="padding:.45rem .6rem;border-radius:10px;border:1px solid #ddd;">
+        <option value=""  {% if not verified %}selected{% endif %}>すべて</option>
+        <option value="1" {% if verified=='1' %}selected{% endif %}>確認済</option>
+        <option value="0" {% if verified=='0' %}selected{% endif %}>未確認</option>
+      </select>
+    </label>
+
+    <label style="display:flex;align-items:center;gap:.35rem;">
+      <input type="checkbox" name="deleted" value="1" {% if show_deleted %}checked{% endif %}>
+      <span style="font-size:.9rem;color:#555;">退会も表示</span>
+    </label>
+
+    <label style="display:flex;align-items:center;gap:.35rem;">
+      <span style="font-size:.9rem;color:#555;">並び</span>
+      <select name="sort" style="padding:.45rem .6rem;border-radius:10px;border:1px solid #ddd;">
+        <option value="id_desc" {% if sort=='id_desc' %}selected{% endif %}>ID降順（新しい順）</option>
+        <option value="id_asc"  {% if sort=='id_asc'  %}selected{% endif %}>ID昇順（古い順）</option>
+      </select>
+    </label>
+
+    <button class="btn" type="submit"
+            style="padding:.6rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;font-weight:700;">
+      検索
+    </button>
+
+    <a class="btn" style="padding:.55rem .9rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;"
+       href="{{ url_for('admin_users_export',
+                        q=q, verified=verified,
+                        deleted=('1' if show_deleted else '0'),
+                        sort=sort) }}">
+      CSVエクスポート
+    </a>
+  </form>
+
+  {# 一覧テーブル #}
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead style="background:#fff7e0;">
+        <tr>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ID</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">名前</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">メール</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">検証</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">状態</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows and rows|length > 0 %}
+          {% for u in rows %}
+          <tr>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ u.id }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;max-width:240px;">
+              <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ u.name or '-' }}</div>
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;max-width:300px;">
+              <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                {{ u.email or '-' }}
+              </div>
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+              {% if u.email_verified %}
+                <span class="badge" style="background:#c8f7c5;color:#0d5b12;padding:.2rem .5rem;border-radius:999px;">確認済</span>
+              {% else %}
+                <span class="badge" style="background:#ffe9a7;color:#6b4b00;padding:.2rem .5rem;border-radius:999px;">未確認</span>
+              {% endif %}
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+              {% if u.deleted_at %}
+                <span class="badge" style="background:#ffd0cc;color:#7a1a12;padding:.2rem .5rem;border-radius:999px;">退会</span>
+              {% else %}
+                <span class="badge" style="background:#e6f1ff;color:#114a9d;padding:.2rem .5rem;border-radius:999px;">アクティブ</span>
+              {% endif %}
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;min-width:420px;">
+              <a href="{{ url_for('admin_user_edit', uid=u.id) }}"
+                 class="btn" style="display:inline-block;margin-right:.35rem;">編集</a>
+
+              <form method="post" action="{{ url_for('admin_user_send_verify', uid=u.id) }}"
+                    style="display:inline-block;margin-right:.35rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn" type="submit" {% if u.deleted_at %}disabled{% endif %}>認証メール再送</button>
+              </form>
+
+              <form method="post" action="{{ url_for('admin_user_send_reset', uid=u.id) }}"
+                    style="display:inline-block;margin-right:.35rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn" type="submit" {% if u.deleted_at %}disabled{% endif %}>再設定メール</button>
+              </form>
+
+              <form method="post" action="{{ url_for('admin_user_delete', uid=u.id) }}"
+                    style="display:inline-block;"
+                    onsubmit="return confirm('退会処理します。よろしいですか？');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-danger" type="submit" {% if u.deleted_at %}disabled{% endif %}>退会</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" style="padding:1rem .8rem;text-align:center;color:#777;">該当するユーザーがいません。</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      ← ダッシュボードに戻る
+    </a>
+  </div>
+</section>
+{% endblock %}

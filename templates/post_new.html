@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main style="max-width:880px; margin:16px auto 64px; padding:0 16px;">
+  <h1 style="font-weight:900; margin:0 0 12px;">新規投稿</h1>
+  {% if store %}
+    <p style="color:#6b7280; margin:0 0 10px;">
+      店舗：<a href="{{ url_for('store_detail', store_id=store['店舗ID']) }}">{{ store['店舗名'] or store.get('name') }}</a>
+    </p>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('post_new') }}" style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="store_id" value="{{ store_id }}">
+
+    <label style="display:block; margin-bottom:10px;">
+      <div style="color:#6b7280;">評価（1〜5）</div>
+      <select name="rating" required style="padding:8px 10px; border:1px solid #e5e7eb; border-radius:10px;">
+        <option value="">選択してください</option>
+        {% for n in [5,4,3,2,1] %}
+          <option value="{{n}}">{{n}}（{{ "★"*n }}）</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label style="display:block; margin-bottom:10px;">
+      <div style="color:#6b7280;">本文（#タグもOK）</div>
+      <textarea name="body" rows="6" placeholder="例：#乳不使用 のケーキが食べられました。店員さんの説明が丁寧でした。" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;"></textarea>
+    </label>
+
+    <div style="margin-bottom:10px;">
+      <div style="color:#6b7280;">写真（最大10枚、jpg/png/webp）</div>
+      <input type="file" name="photos" accept=".jpg,.jpeg,.png,.webp" multiple>
+      <div id="preview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+    </div>
+
+    <div style="display:flex; gap:8px;">
+      <button class="btn" type="submit">投稿する</button>
+      <a class="btn" href="{{ url_for('feed') }}">フィードへ</a>
+    </div>
+  </form>
+</main>
+
+<script>
+  (function(){
+    const inp = document.querySelector('input[name="photos"]');
+    const box = document.getElementById('preview');
+    if(!inp || !box) return;
+    inp.addEventListener('change', ()=>{
+      box.innerHTML = '';
+      [...inp.files].slice(0,10).forEach(f=>{
+        const url = URL.createObjectURL(f);
+        const img = document.createElement('img');
+        img.src = url; img.style.width='120px'; img.style.height='120px'; img.style.objectFit='cover'; img.style.borderRadius='10px'; img.loading='lazy';
+        box.appendChild(img);
+      });
+    });
+  })();
+</script>
+{% endblock %}

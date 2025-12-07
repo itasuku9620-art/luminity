@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}店舗サマリ{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:1100px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:1rem;">店舗サマリ</h1>
+
+  <form method="get" action="{{ url_for('admin_stores') }}"
+        class="card"
+        style="display:grid;grid-template-columns:1fr auto auto auto auto;gap:.5rem;align-items:center;background:#fff;border-radius:14px;padding:.75rem 1rem;box-shadow:0 6px 16px rgba(0,0,0,.06);margin-bottom:1rem;">
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="名称/カテゴリ/住所で検索"
+           style="min-width:240px;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;grid-column:1/2;">
+    <select name="sort" style="padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+      <option value="fav_desc"    {% if sort=='fav_desc' %}selected{% endif %}>お気に入りが多い順</option>
+      <option value="review_desc" {% if sort=='review_desc' %}selected{% endif %}>レビュー件数が多い順</option>
+      <option value="rating_desc" {% if sort=='rating_desc' %}selected{% endif %}>評価が高い順</option>
+      <option value="id_asc"      {% if sort=='id_asc' %}selected{% endif %}>ID昇順</option>
+      <option value="id_desc"     {% if sort=='id_desc' %}selected{% endif %}>ID降順</option>
+    </select>
+    <input type="number" name="limit" value="{{ limit or 200 }}" min="1" max="1000"
+           style="width:7rem;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+
+    <!-- カテゴリ -->
+    <select name="cat" style="padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;min-width:10rem;">
+      <option value="">（すべてのカテゴリ）</option>
+      {% for c in categories %}
+        <option value="{{ c }}" {% if cat==c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- 2段目のフィルタ -->
+    <div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.3rem;">
+      <label style="display:flex;align-items:center;gap:.35rem;">
+        <input type="checkbox" name="ann" value="1" {% if flag_ann %}checked{% endif %}> お知らせあり
+      </label>
+      <label style="display:flex;align-items:center;gap:.35rem;">
+        <input type="checkbox" name="claims" value="1" {% if flag_claims %}checked{% endif %}> 申請あり
+      </label>
+      <label style="display:flex;align-items:center;gap:.35rem;">
+        <input type="checkbox" name="reviews" value="1" {% if flag_reviews %}checked{% endif %}> レビューあり
+      </label>
+      <label style="display:flex;align-items:center;gap:.35rem;">
+        <input type="checkbox" name="favs" value="1" {% if flag_favs %}checked{% endif %}> お気に入りあり
+      </label>
+      <label style="display:flex;align-items:center;gap:.35rem;">
+        評価が <input type="number" step="0.1" min="0" max="5" name="min_rating" value="{{ min_rating or 0 }}"
+                   style="width:5rem;padding:.35rem .6rem;border-radius:10px;border:1px solid #ddd;"> 以上
+      </label>
+
+      <span style="flex:1;"></span>
+
+      <button class="btn" type="submit"
+              style="padding:.6rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;font-weight:700;">
+        検索
+      </button>
+      <!-- 同じフォーム値でCSV出力（method=get + formaction で export=csv を付与） -->
+      <button class="btn" type="submit" formmethod="get"
+              formaction="{{ url_for('admin_stores') }}?export=csv"
+              style="padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;">
+        CSVエクスポート
+      </button>
+    </div>
+  </form>
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);overflow-x:auto;">
+    <table style="width:100%;min-width:980px;border-collapse:collapse;">
+      <thead style="background:#fff7e0;">
+        <tr>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ID</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">店名 / カテゴリ / 住所</th>
+          <th style="text-align:right;padding:.6rem .8rem;border-bottom:1px solid #eee;">お気に入り</th>
+          <th style="text-align:right;padding:.6rem .8rem;border-bottom:1px solid #eee;">レビュー</th>
+          <th style="text-align:right;padding:.6rem .8rem;border-bottom:1px solid #eee;">平均評価</th>
+          <th style="text-align:center;padding:.6rem .8rem;border-bottom:1px solid #eee;">お知らせ</th>
+          <th style="text-align:center;padding:.6rem .8rem;border-bottom:1px solid #eee;">申請</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows and rows|length > 0 %}
+          {% for s in rows %}
+          <tr>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;">{{ s.id or '—' }}</td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;">
+              <div style="font-weight:700;">{{ s.name }}</div>
+              <div style="color:#777;font-size:.92rem;">{{ s.category }}</div>
+              {% if s.address %}<div style="color:#999;font-size:.9rem;">{{ s.address }}</div>{% endif %}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;text-align:right;">{{ s.favorites }}</td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;text-align:right;">{{ s.reviews }}</td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;text-align:right;">
+              {{ ("%.2f"|format(s.rating)) if s.rating is not none else "—" }}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;text-align:center;">
+              {% if s.has_announcement %}
+                <span class="badge" style="background:#ffe0b2;color:#e65100;">あり</span>
+              {% else %}
+                <span class="badge" style="background:#eee;color:#666;">—</span>
+              {% endif %}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;text-align:center;">
+              {% if s.claims and s.claims>0 %}
+                <span class="badge" style="background:#ffd180;color:#e65100;">{{ s.claims }}</span>
+              {% else %}
+                <span class="badge" style="background:#eee;color:#666;">0</span>
+              {% endif %}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;white-space:nowrap;">
+              {% if s.id %}
+                <a class="btn" href="{{ url_for('store_detail', store_id=s.id) }}" target="_blank"
+                   style="padding:.4rem .7rem;border:1px solid #ddd;border-radius:10px;background:#fff;text-decoration:none;">詳細</a>
+                <a class="btn" href="{{ url_for('admin_store_override', store_id=s.id) }}"
+                   style="padding:.4rem .7rem;border:1px solid #ddd;border-radius:10px;background:#fff;text-decoration:none;">メタ上書き</a>
+                <a class="btn" href="{{ url_for('admin_store_safety', store_id=s.id) }}"
+                   style="padding:.4rem .7rem;border:1px solid #ddd;border-radius:10px;background:#fff;text-decoration:none;">安全度補正</a>
+              {% else %}
+                <span style="color:#999;">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="8" style="padding:1rem;color:#777;text-align:center;">該当データがありません。</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      ← ダッシュボードに戻る
+    </a>
+  </div>
+</section>
+{% endblock %}

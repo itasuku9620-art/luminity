@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}コメントモデレーション{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:1000px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:1rem;">コメントモデレーション</h1>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <ul class="flash-list" style="margin:0 0 1rem 0;padding-left:1rem;">
+        {% for cat, msg in messages %}
+          <li class="flash-{{cat}}">{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="get" action="{{ url_for('admin_comments') }}"
+        class="card" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;background:#fff;border-radius:14px;padding:.75rem 1rem;box-shadow:0 6px 16px rgba(0,0,0,.06);margin-bottom:1rem;">
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="本文を検索"
+           style="flex:1;min-width:240px;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <input type="number" name="post_id" value="{{ post_id or '' }}" placeholder="post_id"
+           style="width:9rem;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <input type="number" name="user_id" value="{{ user_id or '' }}" placeholder="user_id"
+           style="width:9rem;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <select name="status" style="padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+      <option value="visible" {% if status=='visible' %}selected{% endif %}>表示中</option>
+      <option value="hidden"  {% if status=='hidden'  %}selected{% endif %}>非表示</option>
+      <option value="all"     {% if status=='all'     %}selected{% endif %}>すべて</option>
+    </select>
+    <button class="btn" type="submit"
+            style="padding:.6rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;font-weight:700;">
+      検索
+    </button>
+  </form>
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead style="background:#fff7e0;">
+        <tr>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ID</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">投稿</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ユーザー</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">本文</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">状態</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows and rows|length > 0 %}
+          {% for c in rows %}
+          <tr>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ c.id }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+              <a href="{{ url_for('post_detail', post_id=c.post_id) }}" target="_blank">投稿#{{ c.post_id }}</a>
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+              {{ c.user_name or ('ユーザー#' ~ c.user_id) }}
+              <div style="color:#888;font-size:.85rem;">{{ c.user_email or '' }}</div>
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;max-width:500px;">
+              <div style="white-space:pre-wrap;word-break:break-word;max-height:4.6em;overflow:hidden;">{{ c.body }}</div>
+              <div style="color:#888;font-size:.85rem;margin-top:.2rem;">{{ c.created_at }}</div>
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+              {% if c.hidden_at %}
+                <span class="badge" style="background:#ffd0cc;color:#7a1a12;padding:.2rem .5rem;border-radius:999px;">非表示</span>
+              {% else %}
+                <span class="badge" style="background:#c8f7c5;color:#0d5b12;padding:.2rem .5rem;border-radius:999px;">表示中</span>
+              {% endif %}
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;min-width:240px;">
+              {% if not c.hidden_at %}
+              <form method="post" action="{{ url_for('admin_comments_hide', cid=c.id) }}" style="display:inline-block;margin-right:.35rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn" type="submit">非表示</button>
+              </form>
+              {% else %}
+              <form method="post" action="{{ url_for('admin_comments_unhide', cid=c.id) }}" style="display:inline-block;margin-right:.35rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn" type="submit">表示に戻す</button>
+              </form>
+              {% endif %}
+
+              <form method="post" action="{{ url_for('admin_comments_delete', cid=c.id) }}"
+                    style="display:inline-block;"
+                    onsubmit="return confirm('完全に削除します。よろしいですか？');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-danger" type="submit">削除</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="6" style="padding:1rem;color:#777;text-align:center;">該当するコメントがありません。</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      ← ダッシュボードに戻る
+    </a>
+  </div>
+</section>
+{% endblock %}

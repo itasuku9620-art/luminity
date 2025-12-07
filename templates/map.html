@@ -1,0 +1,37 @@
+# templates/map.html
+'''
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>登録ユーザー地図</title>
+  <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}"></script>
+</head>
+<body>
+  <h1>登録されたユーザーの位置</h1>
+  <div id="map" style="width:100%; height:500px;"></div>
+
+  <script>
+    const users = {{ users|tojson }};
+
+    function initMap() {
+      const center = { lat: 35.0116, lng: 135.7681 }; // 京都中心
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 12,
+        center: center,
+      });
+
+      users.forEach(user => {
+        const marker = new google.maps.Marker({
+          position: { lat: user[1], lng: user[2] },
+          map: map,
+          title: user[0],
+        });
+      });
+    }
+
+    window.onload = initMap;
+  </script>
+</body>
+</html>
+'''

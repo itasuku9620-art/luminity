@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main style="max-width:720px; margin:16px auto 64px; padding:0 16px;">
+  <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+    <a class="btn" href="{{ back_url }}">← 戻る</a>
+    <h1 style="margin:0; font-weight:900;">{{ title or '通報' }}</h1>
+  </div>
+
+  <form method="post" action="{{ url_for('report_new') }}" style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="kind" value="{{ kind }}">
+    <input type="hidden" name="target_id" value="{{ target_id }}">
+
+    <label style="display:block; margin-bottom:12px;">
+      <div style="color:#6b7280;">理由</div>
+      <select name="reason" required style="width:100%; padding:8px 10px; border:1px solid #e5e7eb; border-radius:10px;">
+        <option value="">選択してください</option>
+        {% for v, label in reasons %}
+          <option value="{{ v }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label style="display:block; margin-bottom:12px;">
+      <div style="color:#6b7280;">詳細（任意）</div>
+      <textarea name="body" rows="5" placeholder="具体的に分かる範囲でご記入ください。" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;"></textarea>
+    </label>
+
+    <div style="display:flex; gap:8px;">
+      <button class="btn" type="submit">送信する</button>
+      <a class="btn" href="{{ back_url }}">キャンセル</a>
+    </div>
+  </form>
+</main>
+{% endblock %}

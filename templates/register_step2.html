@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Step2 - 確認 | Luminity</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&family=Shippori+Mincho:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#fff9ee; --ink:#2b261f; --muted:#6b6052; --card:#ffffff; --line:#efe6d8;
+      --accent:#ffb300; --accent-deep:#f57c00; --radius:18px; --shadow:0 10px 30px rgba(110,72,30,.12);
+    }
+    *{ box-sizing:border-box } body{ margin:0; color:var(--ink); background:#fff9ee; font-family:Inter,"Noto Sans JP",system-ui,sans-serif }
+    main{ min-height:100dvh; display:grid; place-items:center; padding:24px; position:relative }
+    main::before{
+      content:""; position:fixed; inset:0;
+      background:
+        repeating-linear-gradient(45deg, rgba(0,0,0,.012) 0 2px, transparent 2px 8px),
+        repeating-linear-gradient(-45deg, rgba(0,0,0,.010) 0 1.5px, transparent 1.5px 7px);
+      pointer-events:none;
+    }
+    .panel{ width:min(760px,100%); border:1px solid var(--line); border-radius:calc(var(--radius) + 6px); background:var(--card); box-shadow:var(--shadow); padding:24px; }
+    header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px }
+    .brand{ color:var(--accent-deep); font-weight:900; font-family:"Shippori Mincho","Noto Serif JP",serif }
+    .steps{ color:var(--muted); font-size:13px }
+    h1{ margin:12px 0 18px; font-size:22px; font-weight:900; font-family:"Shippori Mincho","Noto Serif JP",serif }
+    .info{ display:grid; gap:12px; margin:10px 0 6px }
+    .row label{ display:block; font-size:12px; color:var(--muted) }
+    .row span{ display:block; font-size:15px }
+    .tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px }
+    .tag{ padding:6px 12px; border-radius:100px; background:#ffe8ad; border:1px solid var(--line); color:#3b2f2f; font-size:13px }
+    .actions{ display:flex; gap:10px; margin-top:18px }
+    .primary{ flex:1; padding:12px 14px; border-radius:12px; border:1px solid var(--accent); background:linear-gradient(180deg,#ffe8ad,#ffc44d); color:#5a3b00; font-weight:900; cursor:pointer }
+    .ghost{ flex:1; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#ffffff; color:#2b261f; font-weight:800; text-decoration:none; text-align:center }
+    .note{ margin-top:10px; color:var(--muted); font-size:12px }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel">
+      <header>
+        <div class="brand">Luminity</div>
+        <div class="steps">Step 2 / 2</div>
+      </header>
+
+      <h1 data-i18n="登録内容の確認|Confirm your details">登録内容の確認</h1>
+
+      <div class="info">
+        <div class="row">
+          <label data-i18n="お名前|Full name">お名前</label>
+          <span>{{ name }}</span>
+        </div>
+        <div class="row">
+          <label data-i18n="メールアドレス|Email">メールアドレス</label>
+          <span>{{ email }}</span>
+        </div>
+        <div class="row">
+          <label data-i18n="住所|Address">住所</label>
+          <span>{{ address }}</span>
+        </div>
+
+        <div class="row">
+          <label data-i18n="選択されたアレルゲン|Selected allergens">選択されたアレルゲン</label>
+          {% if allergens %}
+            <div class="tags">
+              {% for a in allergens %}<span class="tag">{{ a }}</span>{% endfor %}
+            </div>
+          {% elif no_allergy %}
+            <span data-i18n="アレルギーなし|No allergies">アレルギーなし</span>
+          {% else %}
+            <span data-i18n="未選択|None">未選択</span>
+          {% endif %}
+        </div>
+
+        <div class="row">
+          <label data-i18n="その他の食制限|Other preferences">その他の食制限</label>
+          {% if others %}
+            <div class="tags">
+              {% for o in others %}<span class="tag">{{ o }}</span>{% endfor %}
+            </div>
+          {% else %}
+            <span data-i18n="なし|None">なし</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <form method="POST" action="/register_complete" class="actions">
+        <input type="hidden" name="allergens" value="{{ ','.join(allergens) }}">
+        <input type="hidden" name="others" value="{{ ','.join(others) }}">
+        <input type="hidden" name="no_allergy" value="{{ no_allergy }}">
+        <button type="submit" class="primary" data-i18n="登録完了 / Complete|Complete">登録完了 / Complete</button>
+        <a class="ghost" href="/register" data-i18n="戻る / Back|Back">戻る / Back</a>
+      </form>
+
+      <p class="note" data-i18n="送信後、自動ログイン → マイページ → 検索へ進めます。|You’ll be logged in and guided to My Page → Search.">送信後、自動ログイン → マイページ → 検索へ進めます。</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}フィード | {{ super() }}{% endblock %}
+{% block content %}
+<main style="max-width:1080px; margin:16px auto 64px; padding:0 16px;">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+    <h1 style="font-weight:900; margin:0;">新着フィード</h1>
+    <div>
+      <a class="btn" href="{{ url_for('post_new') }}">新規投稿</a>
+    </div>
+  </div>
+
+  <div style="margin-bottom:12px;">
+    <form method="get" action="{{ url_for('tag_page', tag='dummy') }}" onsubmit="event.preventDefault(); const v=this.q.value.trim().replace(/^#/,''); if(v){ location.href='{{ url_for('tag_page', tag='') }}'+encodeURIComponent(v); }">
+      <input name="q" placeholder="#タグで検索（例：#京都カフェ）" style="width:100%; padding:8px 10px; border:1px solid #e5e7eb; border-radius:10px;">
+    </form>
+  </div>
+
+  {% if cards and cards|length > 0 %}
+    <div style="display:grid; grid-template-columns:repeat(12,1fr); gap:12px;">
+      {% for c in cards %}
+        <a href="{{ url_for('post_detail', post_id=c.id) }}" style="grid-column: span 4 / span 4; text-decoration:none; color:inherit; border:1px solid #e5e7eb; border-radius:12px; background:#fff; overflow:hidden;">
+          {% if c.first_photo %}
+            <img src="{{ url_for('static', filename=c.first_photo) }}" alt="" style="width:100%; aspect-ratio:4/3; object-fit:cover;">
+          {% endif %}
+          <div style="padding:10px;">
+            <div style="font-weight:900;">{{ c.store_name or '投稿' }}</div>
+            <div style="color:#6b7280; font-size:12px;">{{ c.rating|stars }}・{{ c.created_at }}</div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="color:#6b7280;">まだ投稿がありません。まずは <a href="{{ url_for('post_new') }}">新規投稿</a> から。</div>
+  {% endif %}
+</main>
+{% endblock %}

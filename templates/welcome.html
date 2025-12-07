@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Luminity - Welcome</title>
+  <style>
+    :root{
+      --beam:#ffd76e; --halo:#b7f9e3; --calm1:#eaf7ff; --calm2:#e7fff3;
+      --ink:#0f172a; --ink-dim:#334155;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{ --beam:rgba(255,215,110,.55); --halo:#1e3a35; --calm1:#0b1420; --calm2:#0a1c17; --ink:#e5eefc; --ink-dim:#b6c7e1; }
+    }
+    html,body{height:100%;margin:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,'Noto Sans',sans-serif;
+      background:
+        radial-gradient(60vmax 60vmax at 68% 28%, var(--beam) 0%, transparent 55%),
+        radial-gradient(70vmax 70vmax at 20% 80%, var(--halo) 0%, transparent 60%),
+        linear-gradient(135deg, var(--calm1), var(--calm2));
+      display:grid; place-items:center; cursor:pointer; overflow:hidden;
+    }
+
+    /* center layout */
+    .hero{
+      min-height:60vh;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:10px; width:100%;
+    }
+
+    .logo{
+      width:min(88vw, 1100px);
+      height:auto; display:block;
+      line-height:0;
+    }
+
+    /* text block under logo */
+    .copy{
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+      text-align:center;
+    }
+    .tag{
+      margin:0; font-size:14px; letter-spacing:.12em; color:var(--ink-dim);
+    }
+    .statement{
+      margin:2px 0 0;
+      font-size:16px; letter-spacing:.02em; color:var(--ink);
+    }
+    .presented{
+      margin:0; font-size:13px; letter-spacing:.08em; color:var(--ink-dim);
+    }
+  </style>
+</head>
+<body aria-label="Tap or click to start">
+  <main class="hero" role="main">
+    <!-- Static logo -->
+    <img class="logo" src="{{ url_for('static', filename='luminity.svg') }}" alt="Luminity">
+
+    <!-- Copy under the logo (all English) -->
+    <div class="copy">
+      <p class="tag">Allergy-friendly places near you</p>
+      <p class="statement">Shining a light on dining for people with food allergies.</p>
+      <p class="presented">Presented by Tasuku Corporation</p>
+    </div>
+  </main>
+
+  <script>
+    // Click / Enter / Space -> go to search
+    addEventListener('click',   () => { location.href = "{{ url_for('search') }}"; });
+    addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') location.href = "{{ url_for('search') }}"; });
+  </script>
+</body>
+</html>

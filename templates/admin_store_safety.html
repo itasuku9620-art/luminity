@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}安全度の手動補正{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:820px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:.5rem;">安全度の手動補正</h1>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <ul class="flash-list" style="margin:0 0 1rem 0;padding-left:1rem;">
+        {% for cat, msg in messages %}
+          <li class="flash-{{cat}}">{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);padding:1rem;margin-bottom:1rem;">
+    <div style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem;">
+      {{ store.name or store.store_name or ('店舗#' ~ store_id) }}
+      <small style="color:#999;margin-left:.5rem;">ID: {{ store_id }}</small>
+    </div>
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;color:#555;">
+      <div>現在の計算値: 
+        <strong>safe={{ current.safe }}</strong>,
+        <strong>trust={{ current.trust }}</strong>,
+        <span>fresh={{ current.fresh_days }}d</span>
+      </div>
+      {% if override %}
+        <div>手動補正: 
+          <strong>safe={{ override.safe or '—' }}</strong>,
+          <strong>trust={{ override.trust or '—' }}</strong>,
+          <span>更新: {{ override.updated_at or '—' }}</span>
+        </div>
+      {% else %}
+        <div>手動補正: なし</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <form method="post" action="{{ url_for('admin_store_safety', store_id=store_id) }}"
+        class="card"
+        style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);padding:1rem;margin-bottom:1rem;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+      <label>safe
+        <select name="safe" style="margin-left:.4rem;padding:.45rem .6rem;border:1px solid #ddd;border-radius:10px;">
+          <option value="" {% if not override or not override.safe %}selected{% endif %}>（変更しない）</option>
+          <option value="ok" {% if override and override.safe=='ok' %}selected{% endif %}>ok（安全）</option>
+          <option value="warn" {% if override and override.safe=='warn' %}selected{% endif %}>warn（注意）</option>
+          <option value="ng" {% if override and override.safe=='ng' %}selected{% endif %}>ng（NG）</option>
+        </select>
+      </label>
+
+      <label>trust
+        <select name="trust" style="margin-left:.4rem;padding:.45rem .6rem;border:1px solid #ddd;border-radius:10px;">
+          <option value="" {% if not override or not override.trust %}selected{% endif %}>（変更しない）</option>
+          <option value="high" {% if override and override.trust=='high' %}selected{% endif %}>high</option>
+          <option value="mid"  {% if override and override.trust=='mid' %}selected{% endif %}>mid</option>
+          <option value="low"  {% if override and override.trust=='low' %}selected{% endif %}>low</option>
+          <option value="pending" {% if override and override.trust=='pending' %}selected{% endif %}>pending</option>
+        </select>
+      </label>
+    </div>
+
+    <div style="margin-top:.6rem;">
+      <label for="note">メモ（任意・内部向け）</label>
+      <textarea id="note" name="note" rows="3"
+                style="width:100%;padding:.6rem .8rem;border:1px solid #ddd;border-radius:10px;">{{ override.note if override else '' }}</textarea>
+    </div>
+
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;">
+      <button class="btn" type="submit"
+              style="padding:.6rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;font-weight:700;">
+        保存
+      </button>
+
+      {% if override %}
+      <button class="btn" type="submit" name="action" value="clear"
+              style="padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;"
+              onclick="return confirm('手動補正を削除します。よろしいですか？');">
+        手動補正をクリア
+      </button>
+      {% endif %}
+
+      <a href="{{ url_for('admin_dashboard') }}" class="btn"
+         style="padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+        ダッシュボードに戻る
+      </a>
+    </div>
+  </form>
+</section>
+{% endblock %}

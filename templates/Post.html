@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}投稿{% endblock %}
+
+{% block content %}
+<h1>投稿する</h1>
+
+<form action="/post" method="post" enctype="multipart/form-data" class="card">
+  <label>写真（jpg, png）</label>
+  <input type="file" name="image" accept="image/*" required>
+
+  <label>コメント</label>
+  <textarea name="caption" rows="4" required></textarea>
+
+  <input type="submit" value="投稿する" class="submit-btn">
+</form>
+{% endblock %}

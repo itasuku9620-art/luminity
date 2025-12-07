@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main style="max-width:720px; margin:16px auto 64px; padding:0 16px;">
+  <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+    <a class="btn" href="{{ url_for('store_detail', store_id=store_id) }}">← 店舗ページへ</a>
+    <h1 style="margin:0; font-weight:900;">店舗の方へ｜掲載・修正リクエスト</h1>
+  </div>
+
+  <div style="color:#6b7280; margin-bottom:12px;">
+    対象店舗：<strong>{{ store["店舗名"] or store.get("name") }}</strong>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('store_claim', store_id=store_id) }}"
+        style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div style="display:grid; grid-template-columns:repeat(12,1fr); gap:12px;">
+      <label style="grid-column:span 6;">
+        <div style="color:#6b7280;">お名前（必須）</div>
+        <input name="name" required style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+      </label>
+      <label style="grid-column:span 6;">
+        <div style="color:#6b7280;">メール（必須）</div>
+        <input name="email" type="email" required style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+      </label>
+      <label style="grid-column:span 6;">
+        <div style="color:#6b7280;">電話（任意）</div>
+        <input name="phone" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+      </label>
+      <label style="grid-column:span 6;">
+        <div style="color:#6b7280;">役職・担当（任意）</div>
+        <input name="position" style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+      </label>
+      <label style="grid-column:span 12;">
+        <div style="color:#6b7280;">内容（任意）</div>
+        <textarea name="message" rows="5" placeholder="掲載・修正したい項目（例：営業時間・予約URL・アレルギー表の差し替え など）"
+                  style="width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px;"></textarea>
+      </label>
+      <label style="grid-column:span 12;">
+        <div style="color:#6b7280;">証憑（名刺・店内掲示・許可証などの写真 / png,jpg,jpeg,webp, 最大 5MB）</div>
+        <input type="file" name="evidence" accept=".png,.jpg,.jpeg,.webp">
+      </label>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <button class="btn" type="submit">送信する</button>
+      <a class="btn" href="{{ url_for('store_detail', store_id=store_id) }}">キャンセル</a>
+    </div>
+  </form>
+</main>
+{% endblock %}

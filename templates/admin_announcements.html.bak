@@ -1,0 +1,45 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin / Announcements{% endblock %}
+{% block content %}
+<h1>Announcements</h1>
+<div class="card">
+  <form method="post">
+    <input type="hidden" name="action" value="create">
+    <p>Title <input name="title" required> Level
+      <select name="level"><option>info</option><option>warning</option><option>danger</option></select>
+      Active <input type="checkbox" name="is_active" checked>
+    </p>
+    <p>Starts <input name="starts_at" placeholder="YYYY-MM-DD HH:MM:SS">
+       Ends <input name="ends_at" placeholder="YYYY-MM-DD HH:MM:SS"></p>
+    <p><textarea name="body" rows="4" cols="80" placeholder="Body..."></textarea></p>
+    <p><button class="primary">Create</button></p>
+  </form>
+</div>
+<div class="card">
+  <table>
+    <tr><th>ID</th><th>Title</th><th>Level</th><th>Active</th><th>Starts</th><th>Ends</th><th>Ops</th></tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.title }}</td>
+      <td><span class="badge">{{ r.level or 'info' }}</span></td>
+      <td>{{ r.is_active }}</td>
+      <td><small class="mono">{{ r.starts_at or '' }}</small></td>
+      <td><small class="mono">{{ r.ends_at or '' }}</small></td>
+      <td>
+        <form class="inline" method="post">
+          <input type="hidden" name="id" value="{{ r.id }}">
+          <input type="hidden" name="action" value="{{ 'deactivate' if r.is_active else 'activate' }}">
+          <button>{{ 'Deactivate' if r.is_active else 'Activate' }}</button>
+        </form>
+        <form class="inline" method="post" onsubmit="return confirm('delete?')">
+          <input type="hidden" name="id" value="{{ r.id }}">
+          <input type="hidden" name="action" value="delete">
+          <button>Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

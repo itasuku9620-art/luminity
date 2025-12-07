@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ログイン - Luminity</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&family=Shippori+Mincho:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#fff9ee; --ink:#2b261f; --muted:#6b6052; --card:#ffffff; --line:#efe6d8;
+           --accent:#ffb300; --accent-deep:#f57c00; --focus:#ffe082; --radius:18px; --shadow:0 10px 30px rgba(110,72,30,.12); }
+    *{ box-sizing:border-box } html,body{ height:100% }
+    body{ margin:0; color:var(--ink); font-family:Inter,"Noto Sans JP",system-ui,sans-serif;
+      display:flex; align-items:center; justify-content:center; padding:24px;
+      background:
+        radial-gradient(980px 420px at 88% -10%, rgba(255,179,0,.22), transparent 60%),
+        radial-gradient(720px 420px at -8% 92%, rgba(255,224,130,.3), transparent 60%),
+        linear-gradient(180deg,#fffcf6 0%, #fff9ee 100%); }
+    body::before{ content:""; position:fixed; inset:0;
+      background:repeating-linear-gradient(45deg, rgba(0,0,0,.012) 0 2px, transparent 2px 8px),
+                 repeating-linear-gradient(-45deg, rgba(0,0,0,.010) 0 1.5px, transparent 1.5px 7px); pointer-events:none; }
+    .shell{ width:min(980px, 100%); display:grid; grid-template-columns: 1.1fr .9fr; gap:28px; }
+    @media (max-width:900px){ .shell{ grid-template-columns:1fr } }
+    .hero{ border:1px solid var(--line); border-radius:calc(var(--radius) + 10px); padding:32px; position:relative;
+      background:linear-gradient(160deg, #ffffff, #fff2cf); box-shadow:var(--shadow); overflow:hidden; }
+    .hero::after{ content:""; position:absolute; right:-40px; bottom:-40px; width:300px; height:300px; border-radius:50%;
+      background:radial-gradient(closest-side, rgba(255,179,0,.24), transparent 70%), conic-gradient(from 0deg, rgba(245,124,0,.10), transparent 25%, rgba(255,224,130,.12) 0 50%, transparent 0 75%, rgba(245,124,0,.10) 0); filter:blur(8px); }
+    .brand{ font-family:"Shippori Mincho","Noto Serif JP",serif; font-weight:800; font-size:28px; color:var(--accent-deep) }
+    .copy{ margin-top:12px; font-size:14px; color:#51493f; line-height:1.8 }
+    .panel{ border:1px solid var(--line); border-radius:var(--radius); padding:26px; background:var(--card); box-shadow:var(--shadow) }
+    h1{ margin:0 0 14px; font-weight:900; font-size:20px; letter-spacing:.02em; font-family:"Shippori Mincho","Noto Serif JP",serif }
+    .field{ display:grid; gap:6px; margin:10px 0 14px } label{ font-size:12px; color:var(--muted) }
+    input{ appearance:none; width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#ffffff; color:#2b261f; font-size:14px; outline:none; }
+    input:focus{ border-color:#f7c566; box-shadow:0 0 0 4px rgba(255,224,130,.4) }
+    .primary{ width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--accent); background:linear-gradient(180deg,#ffe8ad,#ffc44d); color:#5a3b00; font-weight:900; cursor:pointer }
+
+    /* Google ボタン */
+    .gbtn{
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      width:100%; padding:12px 14px; background:#ffffff; color:#2b261f;
+      border:1px solid var(--line); border-radius:12px; cursor:pointer; font-weight:800;
+      max-height:56px; overflow:hidden; /* 予防 */
+    }
+    /* アイコンを明示サイズに固定（巨大化防止） */
+    .gbtn .gicon{ width:20px; height:20px; flex:0 0 20px; display:block; }
+    .links{ margin-top:16px; font-size:14px } .links a{ color:var(--accent-deep); text-decoration:none; border-bottom:1px dashed rgba(245,124,0,.35) }
+    .divider{ display:flex; align-items:center; gap:12px; color:#6b6052; margin:14px 0 } .divider::before,.divider::after{ content:""; height:1px; flex:1; background:var(--line) }
+  </style>
+</head>
+<body>
+  <div class="shell" role="main">
+    <section class="hero" aria-label="About Luminity">
+      <div class="brand">Luminity</div>
+      <p class="copy" data-i18n="食の「不安」を地図とデータで可視化。あなたの基準で“安全・注意・NG”を一目で。|Make dining safer with your own allergy profile—at a glance.">
+        食の「不安」を地図とデータで可視化。あなたの基準で“安全・注意・NG”を一目で。
+      </p>
+      <p class="copy" style="margin-top:8px;">
+        <a href="/language?next=/login" class="links">言語を選択 / Choose language</a>
+      </p>
+    </section>
+
+    <section class="panel" aria-label="Sign in form">
+      <h1 data-i18n="ログイン|Sign in">ログイン</h1>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}<ul class="flash">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
+      {% endwith %}
+
+      <form method="POST" novalidate>
+        <div class="field">
+          <label for="email" data-i18n="メールアドレス|Email">メールアドレス</label>
+          <input id="email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="password" data-i18n="パスワード|Password">パスワード</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <!-- ログイン後の遷移先を明示 -->
+        <input type="hidden" name="next" value="/search">
+        <button class="primary" type="submit" data-i18n="メールでログイン / Sign in with Email|Sign in with Email">メールでログイン / Sign in with Email</button>
+      </form>
+
+      <div class="divider" data-i18n="または / or|or">または / or</div>
+
+      <button class="gbtn" type="button" onclick="googleLogin()" data-i18n="Google で続行 / Continue with Google|Continue with Google">
+        <svg class="gicon" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M533.5 278.4c0-17.4-1.5-34.1-4.3-50.3H272v95.2h146.9c-6.4 34.4-25.1 63.5-53.5 83v68h86.4c50.6-46.6 81.7-115.3 81.7-196z" fill="#4285f4"/>
+          <path d="M272 544.3c72.6 0 133.6-24.1 178.1-65.4l-86.4-68c-24 16-54.7 25.4-91.7 25.4-70.6 0-130.4-47.7-151.8-111.5H30.3v69.9C74.6 480.6 166.8 544.3 272 544.3z" fill="#34a853"/>
+          <path d="M120.2 324.8c-10-30-10-62.4 0-92.4v-69.9H30.3c-39.5 77.8-39.5 169.6 0 247.4l89.9-69.9z" fill="#fbbc04"/>
+          <path d="M272 107.2c39.4-.6 77.2 14.6 106.1 41.9l79.1-79.1C400.5 24.3 338.2-.1 272 0 166.8 0 74.6 63.7 30.3 162.5l89.9 69.9c21.5-63.8 81.3-111.5 151.8-111.5z" fill="#ea4335"/>
+        </svg>
+        Google で続行 / Continue with Google
+      </button>
+
+      <div class="links" style="margin-top:16px;">
+        <span data-i18n="初めての方 →|New here? →">初めての方 →</span> <a href="/register" data-i18n="新規登録|Create account">新規登録</a><br>
+        <span data-i18n="パスワードを忘れた？ →|Forgot password? →">パスワードを忘れた？ →</span> <a href="/login/forgot" data-i18n="再設定|Reset">再設定</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- 初回: スプラッシュ→言語選択。言語未選択: 言語選択へ。 -->
+  <script>
+    (function(){
+      try{
+        var here = location.pathname + location.search;
+        var nextToLanguage = '/language?next=' + encodeURIComponent(here);
+        if(!localStorage.getItem('lumi_seen_splash')){
+          var chain = '/splash?next=' + encodeURIComponent(nextToLanguage);
+          location.replace(chain);
+          return;
+        }
+        if(!localStorage.getItem('lumi_lang')){
+          location.replace(nextToLanguage);
+          return;
+        }
+      }catch(e){}
+    })();
+  </script>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBejn2ROpNJ4l0hIXUbyGUUiT33zo9737o",
+      authDomain: "allergyapp-93512.firebaseapp.com",
+      projectId: "allergyapp-93512",
+      storageBucket: "allergyapp-93512.firebasestorage.app",
+      messagingSenderId: "85622623234",
+      appId: "1:85622623234:web:8de954d9efce55d5da6b1b",
+      measurementId: "G-BMS567RSHM"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    // Firebase ログイン成功後は必ず /search へ
+    function googleLogin(){
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider)
+        .then(res => res.user.getIdToken())
+        .then(token => fetch("/firebase_login?next=/search", {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({ idToken: token })
+        }))
+        .then(() => { window.location.href = "/search"; }) // 念のため固定で遷移
+        .catch(err => console.error("ログイン失敗:", err));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}メールを送信しました{% endblock %}
+{% block content %}
+<main style="max-width:520px;margin:24px auto;padding:0 16px;">
+  <h1>メールを送信しました</h1>
+  <p>
+    入力されたメールアドレス
+    {% if email %}<strong>{{ email }}</strong>{% else %}<em>(設定なし)</em>{% endif %}
+    宛に再設定リンクを送信しました。<br>
+    数分待っても届かない場合は、迷惑メールフォルダをご確認ください。
+  </p>
+  <div style="margin-top:14px;display:flex;gap:8px;">
+    <a class="btn" href="{{ url_for('login') }}">ログインへ</a>
+    <a class="btn ghost" href="{{ url_for('forgot_password') }}">別のメールで送る</a>
+  </div>
+</main>
+{% endblock %}

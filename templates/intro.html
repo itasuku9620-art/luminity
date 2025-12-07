@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Luminity Stroke Animation</title>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(90deg, #f5d547, #81d768, #4ecdc4, #2a9df4);
+      background-size: 400% 400%;
+      animation: gradientFlow 12s ease infinite;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @keyframes gradientFlow {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+
+    svg {
+      width: 600px;
+      height: 200px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    text {
+      font-family: 'Great Vibes', cursive;
+      font-size: 80px;
+      fill: none;
+      stroke: white;
+      stroke-width: 2;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: draw 4s ease forwards;
+      text-anchor: middle;
+    }
+
+    @keyframes draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    .button {
+      padding: 10px 20px;
+      font-size: 20px;
+      background-color: white;
+      color: #2a9df4;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: 0.3s;
+      margin-top: 15px;
+    }
+
+    .button:hover {
+      background-color: #2a9df4;
+      color: white;
+    }
+
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .text-link {
+      margin-top: 10px;
+      font-size: 16px;
+      color: white;
+      text-decoration: underline;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .text-link:hover {
+      opacity: 0.8;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+    <text x="400" y="130">Luminity</text>
+  </svg>
+
+  <button class="button" id="startButton" onclick="showLoginButtons()">はじめる</button>
+
+  <div class="button-container hidden" id="loginSection">
+    <button class="button" onclick="location.href='/login'">ログイン</button>
+    <button class="text-link" onclick="location.href='/register'">初めての方　新規登録</button>
+  </div>
+
+  <script>
+    function showLoginButtons() {
+      document.getElementById('startButton').classList.add('hidden');
+      document.getElementById('loginSection').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}投稿詳細 | {{ super() }}{% endblock %}
+{% block content %}
+<main style="max-width:880px; margin:16px auto 64px; padding:0 16px;">
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+    <a class="btn" href="{{ url_for('feed') }}">← フィード</a>
+    {% if store_id %}
+      <a class="btn" href="{{ url_for('store_detail', store_id=store_id) }}">店舗ページ</a>
+    {% endif %}
+  </div>
+
+  <article style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px;">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <div style="font-weight:900;">{{ store_name or '投稿' }}</div>
+      <div>{{ post['created_at'] }}</div>
+    </div>
+    <div style="margin:8px 0; font-size:18px; font-weight:900;">{{ post['rating']|stars }}</div>
+
+    {% if photos %}
+      <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin:10px 0;">
+        {% for ph in photos %}
+          <img src="{{ url_for('static', filename=ph['path']) }}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;">
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if post['body'] %}
+      <div style="white-space:pre-wrap; line-height:1.6;">{{ post['body']|linkify_tags|safe }}</div>
+    {% endif %}
+
+    {% if tags and tags|length > 0 %}
+      <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+        {% for t in tags %}
+          <a class="btn" href="{{ url_for('tag_page', tag=t) }}">#{{ t }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </article>
+
+  <!-- コメント -->
+  <section id="comments" style="margin-top:16px;">
+    <h2 style="font-weight:900; margin:0 0 8px;">コメント</h2>
+    <form method="post" action="{{ url_for('post_add_comment', post_id=post['id']) }}" style="display:flex; gap:8px; margin-bottom:8px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input name="body" placeholder="感想を入力…" style="flex:1; padding:8px 10px; border:1px solid #e5e7eb; border-radius:10px;">
+      <button class="btn" type="submit">送信</button>
+      <div style="margin-top:8px;">
+  <a class="btn" href="{{ url_for('report_new') }}?kind=post&id={{ post['id'] }}">この投稿を報告</a>
+</div>
+
+    </form>
+    {% if comments %}
+      <div style="display:grid; gap:8px;">
+        {% for c in comments %}
+          <div style="border:1px solid #e5e7eb; border-radius:10px; padding:10px; background:#fff;">
+            <div style="color:#6b7280; font-size:12px;">{{ c['name'] or 'ユーザー' }}・{{ c['created_at'] }}</div>
+            <div style="margin-top:4px; white-space:pre-wrap;">{{ c['body'] }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="color:#6b7280;">まだコメントはありません。</div>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}モデレーション{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:1100px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:1rem;">モデレーション（{{ '投稿' if type=='posts' else 'コメント' }}）</h1>
+
+  <!-- 切替タブ -->
+  <div style="display:flex;gap:.5rem;margin-bottom:.6rem;">
+    <a class="btn" href="{{ url_for('admin_posts', type='posts') }}"
+       style="padding:.45rem .9rem;border-radius:999px;{{ 'background:#FFECB3;border:1px solid #FBC02D;' if type=='posts' else 'background:#fff;border:1px solid #ddd;' }}">
+      投稿
+    </a>
+    <a class="btn" href="{{ url_for('admin_posts', type='comments') }}"
+       style="padding:.45rem .9rem;border-radius:999px;{{ 'background:#FFECB3;border:1px solid #FBC02D;' if type=='comments' else 'background:#fff;border:1px solid #ddd;' }}">
+      コメント
+    </a>
+  </div>
+
+  <!-- 検索フォーム -->
+  <form method="get" action="{{ url_for('admin_posts') }}"
+        class="card"
+        style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;background:#fff;border-radius:14px;padding:.75rem 1rem;box-shadow:0 6px 16px rgba(0,0,0,.06);margin-bottom:1rem;">
+    <input type="hidden" name="type" value="{{ type }}">
+    <input type="search" name="q" value="{{ q or '' }}" placeholder="{{ '本文/ユーザーID/ストアID' if type=='posts' else '本文/ユーザーID/投稿ID' }} を検索"
+           style="flex:1;min-width:260px;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <select name="hidden" style="padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+      <option value="0"   {% if hidden=='0' %}selected{% endif %}>表示中</option>
+      <option value="1"   {% if hidden=='1' %}selected{% endif %}>非表示</option>
+      <option value="all" {% if hidden=='all' %}selected{% endif %}>すべて</option>
+    </select>
+    <select name="sort" style="padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+      <option value="new" {% if sort=='new' %}selected{% endif %}>新しい順</option>
+      <option value="old" {% if sort=='old' %}selected{% endif %}>古い順</option>
+    </select>
+    <input type="number" name="limit" value="{{ limit or 200 }}" min="1" max="1000"
+           style="width:7rem;padding:.6rem .8rem;border-radius:12px;border:1px solid #ddd;">
+    <button class="btn" type="submit"
+            style="padding:.6rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;font-weight:700;">
+      検索
+    </button>
+  </form>
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);overflow-x:auto;">
+    <table style="width:100%;min-width:980px;border-collapse:collapse;">
+      <thead style="background:#fff7e0;">
+        <tr>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ID</th>
+          {% if type=='posts' %}
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ユーザーID / ストアID</th>
+          {% else %}
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ユーザーID / 投稿ID</th>
+          {% endif %}
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">本文</th>
+          <th style="text-align:center;padding:.6rem .8rem;border-bottom:1px solid #eee;">状態</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">作成日時</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows and rows|length > 0 %}
+          {% for r in rows %}
+          <tr>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;">{{ r.id }}</td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;">
+              {% if type=='posts' %}
+                user={{ r.user_id }} / store={{ r.store_id }}
+              {% else %}
+                user={{ r.user_id }} / post={{ r.post_id }}
+              {% endif %}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;max-width:520px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              {{ (r.content if type=='posts' else r.comment) or '' }}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;text-align:center;">
+              {% if r.hidden %}
+                <span class="badge" style="background:#ffe0e0;color:#d32f2f;">非表示</span>
+              {% else %}
+                <span class="badge" style="background:#e8f5e9;color:#2e7d32;">表示中</span>
+              {% endif %}
+            </td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;">{{ r.created_at or '—' }}</td>
+            <td style="padding:.55rem .8rem;border-bottom:1px solid #f2f2f2;white-space:nowrap;">
+              <form method="post" action="{{ url_for('admin_posts_mod') }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="type" value="{{ type }}">
+                <input type="hidden" name="id" value="{{ r.id }}">
+                {% if r.hidden %}
+                  <input type="hidden" name="action" value="unhide">
+                  <button class="btn" type="submit" style="padding:.35rem .7rem;border:1px solid #ddd;border-radius:10px;background:#fff;">再表示</button>
+                {% else %}
+                  <input type="hidden" name="action" value="hide">
+                  <button class="btn" type="submit" style="padding:.35rem .7rem;border:1px solid #ddd;border-radius:10px;background:#fff;">非表示</button>
+                {% endif %}
+              </form>
+              <form method="post" action="{{ url_for('admin_posts_mod') }}" style="display:inline;margin-left:.3rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="type" value="{{ type }}">
+                <input type="hidden" name="id" value="{{ r.id }}">
+                <input type="hidden" name="action" value="soft_delete">
+                <button class="btn" type="submit" style="padding:.35rem .7rem;border:1px solid #fdd;border-radius:10px;background:#fff;color:#d32f2f;">論理削除</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="6" style="padding:1rem;color:#777;text-align:center;">該当データがありません。</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      ← ダッシュボードに戻る
+    </a>
+  </div>
+</section>
+{% endblock %}

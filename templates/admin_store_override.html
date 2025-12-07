@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}店舗オーバーライド編集{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:900px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:.5rem;">店舗オーバーライド編集</h1>
+  <p style="color:#777;margin-top:0;">Sheetsの値に対してローカルで一時的に上書きします。</p>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <ul class="flash-list" style="margin:0 0 1rem 0;padding-left:1rem;">
+        {% for cat, msg in messages %}
+          <li class="flash-{{cat}}">{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);padding:1rem;margin-bottom:1rem;">
+    <div style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem;">
+      {{ store.name or store.store_name or ('店舗#' ~ store_id) }}
+      <small style="color:#999;margin-left:.5rem;">ID: {{ store_id }}</small>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;color:#555;">
+      <div>住所: {{ store.address or '—' }}</div>
+      <div>カテゴリ: {{ store.category or '—' }}</div>
+      <div>営業時間: {{ store.open or '—' }} - {{ store.close or '—' }}</div>
+      <div>休業: {% if (store.closed|string) in ['1','true','True'] %}はい{% else %}いいえ{% endif %}</div>
+      <div>座標: {{ store.lat or '—' }}, {{ store.lng or '—' }}</div>
+    </div>
+  </div>
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);padding:1rem;margin-bottom:1rem;">
+    <h2 style="font-size:1rem;margin:0 0 .6rem 0;">新しい上書きの追加/更新</h2>
+    <form method="post" action="{{ url_for('admin_store_override', store_id=store_id) }}" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="set">
+      <select name="key" style="padding:.5rem;border:1px solid #ddd;border-radius:10px;">
+        {% for k, hint in recommended_keys %}
+          <option value="{{ k }}">{{ k }}（{{ hint }}）</option>
+        {% endfor %}
+      </select>
+      <input name="value" type="text" placeholder="値（空欄で削除）" style="flex:1;min-width:260px;padding:.5rem;border:1px solid #ddd;border-radius:10px;">
+      <button class="btn" type="submit" style="padding:.55rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;">保存</button>
+    </form>
+    <div style="margin-top:.5rem;color:#777;font-size:.9rem;">
+      任意のキーを使いたい場合は上のセレクトを書き換えて送信してもOKです。
+    </div>
+  </div>
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);overflow:hidden;">
+    <div style="padding:.8rem 1rem;border-bottom:1px solid #eee;background:#fff7e0;display:flex;justify-content:space-between;align-items:center;">
+      <div>現在のオーバーライド</div>
+      <form method="post" action="{{ url_for('admin_store_override', store_id=store_id) }}"
+            onsubmit="return confirm('この店舗のオーバーライドを全て削除します。よろしいですか？');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="clear_all">
+        <button class="btn" type="submit" style="padding:.45rem .8rem;border-radius:10px;background:#fff;border:1px solid #ddd;">全削除</button>
+      </form>
+    </div>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">キー</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">値</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">更新者</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">更新日時</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if overrides and overrides|length > 0 %}
+          {% for o in overrides %}
+          <tr>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ o.key }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;max-width:420px;"><div style="white-space:pre-wrap;word-break:break-word;">{{ o.value }}</div></td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ o.updated_by or '-' }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ o.updated_at or '-' }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+              <form method="post" action="{{ url_for('admin_store_override', store_id=store_id) }}" style="display:inline-block;"
+                    onsubmit="return confirm('このオーバーライドを削除します。よろしいですか？');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="key" value="{{ o.key }}">
+                <button class="btn" type="submit" style="padding:.45rem .8rem;border-radius:10px;background:#fff;border:1px solid #ddd;">削除</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="5" style="padding:1rem;color:#777;">オーバーライドはありません。</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      ← ダッシュボードに戻る
+    </a>
+  </div>
+</section>
+{% endblock %}

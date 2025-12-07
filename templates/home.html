@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Luminity - 店舗一覧</title>
+</head>
+<body>
+    <h1>掲載店舗</h1>
+    <ul>
+        {% for store in stores %}
+            <li>
+                <strong>{{ store['店舗名'] }}</strong><br>
+                {{ store['住所'] }}<br>
+                カテゴリ: {{ store['カテゴリ'] }}<br>
+                <a href="{{ store['アレルギー表URL'] }}" target="_blank">アレルギー表を見る</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

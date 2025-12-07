@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}ユーザー編集{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:800px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:1rem;">ユーザー編集</h1>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <ul class="flash-list" style="margin:0 0 1rem 0;padding-left:1rem;">
+        {% for cat, msg in messages %}
+          <li class="flash-{{cat}}">{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  {% if u %}
+  <form method="post" action="{{ url_for('admin_user_edit', uid=u.id) }}"
+        class="card"
+        style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);padding:1rem;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-group" style="margin-bottom:.8rem;">
+      <label for="name">名前</label>
+      <input id="name" name="name" type="text" class="input"
+             value="{{ u.name or '' }}"
+             style="width:100%;padding:.6rem .8rem;border:1px solid #ddd;border-radius:10px;">
+    </div>
+
+    <div class="form-group" style="margin-bottom:.8rem;">
+      <label for="email">メール</label>
+      <input id="email" name="email" type="email" class="input"
+             value="{{ u.email or '' }}"
+             style="width:100%;padding:.6rem .8rem;border:1px solid #ddd;border-radius:10px;">
+    </div>
+
+    <div class="form-group" style="margin-bottom:.8rem;">
+      <label style="display:flex;align-items:center;gap:.5rem;">
+        <input type="checkbox" name="email_verified" value="1" {% if u.email_verified %}checked{% endif %}>
+        メール検証を「確認済」にする
+      </label>
+    </div>
+
+    <div class="form-group" style="margin-bottom:.8rem;">
+      <label for="new_password">新しいパスワード（任意）</label>
+      <input id="new_password" name="new_password" type="password" class="input"
+             placeholder="未入力なら変更しません"
+             style="width:100%;padding:.6rem .8rem;border:1px solid #ddd;border-radius:10px;">
+      <small style="color:#777;">※ 8文字以上を推奨</small>
+    </div>
+
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;">
+      <button type="submit" class="btn"
+              style="padding:.6rem 1rem;border-radius:999px;background:linear-gradient(#FFC107,#F57C00);border:none;font-weight:700;">
+        保存
+      </button>
+
+      <form method="post" action="{{ url_for('admin_user_send_verify', uid=u.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn" type="submit"
+                style="padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;">
+          認証メール再送
+        </button>
+      </form>
+
+      <form method="post" action="{{ url_for('admin_user_send_reset', uid=u.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn" type="submit"
+                style="padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;">
+          再設定メール
+        </button>
+      </form>
+
+      <a href="{{ url_for('admin_users') }}" class="btn"
+         style="padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+        一覧へ戻る
+      </a>
+    </div>
+  </form>
+  {% else %}
+    <p style="color:#777;">ユーザーが見つかりません。</p>
+    <a href="{{ url_for('admin_users') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      一覧へ戻る
+    </a>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% set APP_NAME = 'Luminity' %}
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block head %}{% endblock %}
+
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+
+  
+  <style>
+    :root{
+      --wa-kinari:#fff9ee; --wa-ink:#2b261f; --wa-muted:#6b6052; --wa-card:#ffffff; --wa-line:#efe6d8;
+      --wa-accent:#ffb300; --wa-accent-deep:#f57c00; --wa-focus:#ffe082;
+    }
+    body{ background:var(--wa-kinari); color:var(--wa-ink); }
+    body::before{ content:""; position:fixed; inset:0; z-index:-1;
+      background:
+        radial-gradient(900px 420px at 85% -10%, rgba(255,179,0,.18), transparent 60%),
+        radial-gradient(720px 420px at -8% 92%, rgba(255,224,130,.24), transparent 60%),
+        linear-gradient(180deg,#fffcf6 0%, #fff9ee 100%); pointer-events:none; }
+
+    /* ── ヘッダー：極力シンプル ── */
+    .lumi-navbar{ position:sticky; top:0; z-index:40; background:linear-gradient(180deg,#fff4d0,#ffe59b);
+      border-bottom:1px solid var(--wa-line); box-shadow:0 2px 12px rgba(110,72,30,.12); }
+    .lumi-nav-inner{ max-width:1200px; margin:0 auto; padding:10px 14px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .lumi-brand{ display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.3px; color:#111; text-decoration:none; }
+    .lumi-brand img{ height:28px; width:auto; }
+    .lumi-actions{ display:flex; align-items:center; gap:10px; }
+    .icon-btn{ appearance:none; border:0; background:transparent; cursor:pointer; padding:8px; border-radius:12px; }
+    .icon-btn:hover{ background:#fff8e5 }
+    .btn{ display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border:1px solid var(--wa-line);
+      border-radius:12px; background:#fff; color:#2b261f; text-decoration:none; font-weight:800; }
+    .badge-dot{ margin-left:6px; background:#ef4444; color:#fff; font-weight:700; border-radius:999px; padding:0 8px; font-size:12px; }
+
+    /* 検索パネル（既存仕様：lumi:search を発火） */
+    .lumi-search-panel{ position:sticky; top:56px; display:none; background:#fff; border-bottom:1px solid #eee; box-shadow:0 6px 14px rgba(0,0,0,.06); }
+    .lumi-search-panel.open{ display:block; }
+    .lumi-search-inner{ max-width:1200px; margin:0 auto; padding:10px 14px 14px; display:flex; align-items:center; gap:10px; }
+    .lumi-search-input{ flex:1; display:flex; align-items:center; gap:8px; background:#fff6e0; border:1px solid var(--wa-line); border-radius:14px; padding:10px 12px; }
+    .lumi-search-input input{ flex:1; border:none; background:transparent; outline:none; font-size:16px; }
+    .sr-only{ position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0 }
+  </style>
+</head>
+<body>
+  <header class="lumi-navbar" role="banner">
+    <div class="lumi-nav-inner">
+      <a class="lumi-brand" href="{{ url_for('search') }}">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Luminity" />
+        <span>Luminity</span>
+      </a>
+      <nav class="lumi-actions" aria-label="Global">
+        <a class="icon-btn" href="{{ url_for('mypage') }}#favorites" title="お気に入り"><span aria-hidden>❤️</span><span class="sr-only">お気に入り</span></a>
+        <a class="icon-btn" href="{{ url_for('mypage') }}" title="マイページ"><span aria-hidden>👤</span><span class="sr-only">マイページ</span></a>
+        {% if session.get('is_admin') %}
+          <a class="icon-btn" href="{{ url_for('admin') }}" title="管理"><span aria-hidden>🛠️</span><span class="sr-only">管理</span></a>
+        {% endif %}
+        <button id="openGlobalSearch" class="icon-btn" title="検索"><span aria-hidden>🔍</span><span class="sr-only">検索を開く</span></button>
+        <a class="btn" href="{{ url_for('notifications') }}">
+          通知
+          {% set c = notify_unread_count() %}
+          {% if c %}<span class="badge-dot">{{ c }}</span>{% endif %}
+        </a>
+      </nav>
+    </div>
+
+    <div id="globalSearchPanel" class="lumi-search-panel" role="region" aria-label="検索パネル">
+      <div class="lumi-search-inner">
+        <div class="lumi-search-input">
+          <span aria-hidden>🔍</span>
+          <input id="globalSearchInput" type="search"
+                 placeholder="店名・住所・カテゴリで検索（#タグ もOK）" autocomplete="off"
+                 data-i18n-ph="店名・住所・カテゴリで検索（#タグ もOK）|Search by name, address or category (#tag OK)">
+        </div>
+        <button id="closeGlobalSearch" class="icon-btn" title="閉じる">✕</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block scripts %}{% endblock %}
+
+  <script>
+    // ===== クライアントi18n（UI固定文&data-i18n*対応） =====
+    (function(){
+      const DICT = {
+        "ログイン":"Sign in","メールアドレス":"Email","パスワード":"Password",
+        "新規登録":"Create account","再設定":"Reset","通知":"Notifications",
+        "すべて":"All","安全":"Safe","注意":"Caution","NG":"NG",
+        "詳細":"Details","レビュー":"Reviews","予約":"Reserve","メニュー":"Menu",
+        "Instagram":"Instagram","お気に入り":"Favorite","お気に入り済み":"Favorited",
+        "営業時間":"Hours","更新: 計測中":"Updated: checking","信頼度: －":"Trust: —",
+        "定休日":"Closed","要確認":"Check hours","営業中":"Open","営業時間外":"Closed",
+        "あなたの安全指標で探す":"Search by your safety profile",
+        "写真映えより“合う/合わない”に集中した、和モダンのやさしい表示。":"A warm, modern-Japanese result focused on “fit or not”."
+      };
+      const LS_KEY='lumi_lang';
+      function getLang(){ return localStorage.getItem(LS_KEY) || 'ja'; }
+      function setLang(v){ localStorage.setItem(LS_KEY, v); document.documentElement.lang=(v==='en'?'en':'ja'); }
+      function apply(root=document){
+        const lang=getLang();
+        root.querySelectorAll('[data-i18n]').forEach(el=>{
+          const v=el.getAttribute('data-i18n')||'';
+          if(!v) return;
+          if(v.includes('|')){ const [ja,en]=v.split('|'); el.textContent=(lang==='en')?(en||ja):ja; }
+          else if(lang==='en' && DICT[v]){ el.textContent=DICT[v]; }
+        });
+        root.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+          const v=el.getAttribute('data-i18n-ph')||''; if(!v) return;
+          const [ja,en]=v.split('|'); el.setAttribute('placeholder', (lang==='en')?(en||ja):ja);
+        });
+        root.querySelectorAll('[data-i18n-title]').forEach(el=>{
+          const v=el.getAttribute('data-i18n-title')||''; if(!v) return;
+          const [ja,en]=v.split('|'); el.setAttribute('title', (lang==='en')?(en||ja):ja);
+        });
+      }
+      setLang(getLang()); apply(document);
+      // 他ページから使えるよう公開
+      window.LumiLang = { get:getLang, set:(v)=>{ setLang(v); apply(document); location.reload(); } };
+    })();
+  </script>
+
+  <script>
+    // ===== 検索パネル（lumi:search を発火） =====
+    (function(){
+      const panel=document.getElementById('globalSearchPanel');
+      const input=document.getElementById('globalSearchInput');
+      const openBtn=document.getElementById('openGlobalSearch');
+      const closeBtn=document.getElementById('closeGlobalSearch');
+      function open(){ panel.classList.add('open'); input&&input.focus(); }
+      function close(){ panel.classList.remove('open'); if(input){ input.value=''; dispatchEvent(new CustomEvent('lumi:search',{detail:''})); } }
+      openBtn&&openBtn.addEventListener('click',open);
+      closeBtn&&closeBtn.addEventListener('click',close);
+      let t; input&&input.addEventListener('input',e=>{ clearTimeout(t); t=setTimeout(()=>dispatchEvent(new CustomEvent('lumi:search',{detail:(e.target.value||'').trim()})),150); });
+      document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&panel.classList.contains('open')) close(); });
+    })();
+  </script>
+
+  <script>
+    // #タグ 直接遷移
+    (function(){
+      const inp=document.getElementById('globalSearchInput'); if(!inp) return;
+      const go=(v)=>{ v=(v||'').trim(); if(!v.startsWith('#')) return false; const tag=v.replace(/^#+/,''); if(!tag) return false; location.href='/tags/'+encodeURIComponent(tag); return true; };
+      inp.addEventListener('keydown',e=>{ if(e.key==='Enter' && go(inp.value)){ e.preventDefault(); e.stopPropagation(); } });
+    })();
+  </script>
+ <!-- <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}"> -->
+
+<meta name="theme-color" content="#ffbb00">
+
+<!-- iOS用（ホーム追加を有効化） -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Luminity">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+ <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js');
+  });
+}
+</script>
+{% set IS_PUBLIC = request.args.get('public') == '1' %}
+<header class="navbar">
+  {% if not IS_PUBLIC %}
+    <!-- 通常ナビ（通知・ログイン・編集など） -->
+  {% endif %}
+</header>
+
+</body>
+</html>

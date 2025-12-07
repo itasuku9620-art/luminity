@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  main.mypage{ max-width:1080px; margin:16px auto 64px; padding:0 16px; }
+  .muted{ color:#6b7280; font-size:12px; }
+
+  .tabs{ display:flex; gap:8px; border-bottom:1px solid #e5e7eb; margin-bottom:16px; }
+  .tab{ appearance:none; background:#fff; border:1px solid #e5e7eb; border-bottom:none; padding:10px 14px;
+        border-top-left-radius:12px; border-top-right-radius:12px; font-weight:800; cursor:pointer; }
+  .tab[aria-selected="true"]{ background:#fff8e0; border-color:#f4e38a; }
+  .panels{ position:relative; } .panel{ display:none; } .panel[aria-hidden="false"]{ display:block; }
+
+  .btn{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid #d1d5db; border-radius:10px; text-decoration:none; color:#111; background:#fff; }
+  .btn:hover{ background:#f9fafb; }
+
+  .profile-card{ display:grid; grid-template-columns:160px 1fr; gap:16px; background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px; }
+  .avatar{ width:110px; height:110px; border-radius:16px; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-weight:900; color:#9aa3af; font-size:38px; overflow:hidden; }
+  .fields{ display:grid; gap:6px; color:#374151; } .fields .row{ display:flex; gap:12px; align-items:center; }
+  .fields .row .label{ width:80px; color:#6b7280; }
+
+  .lang-inline{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .lang-chip{ padding:6px 10px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; font-weight:800; }
+  .lang-chip.active{ background:#ffe59b; border-color:#ffd166; }
+
+  .fav-head{ display:flex; align-items:center; justify-content:space-between; margin-top:18px; margin-bottom:8px; }
+  .fav-count{ color:#6b7280; }
+  .fav-grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:12px; }
+  .fav-card{ grid-column: span 6 / span 6; border:1px solid #e5e7eb; border-radius:12px; padding:12px; background:#fff; display:flex; flex-direction:column; gap:8px; }
+  @media (max-width:900px){ .fav-card{ grid-column: span 12 / span 12; } .profile-card{ grid-template-columns:1fr; } }
+  .fav-title{ font-weight:800; } .fav-meta{ color:#6b7280; font-size:12px; } .fav-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .aller-wrap{ background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px; }
+  .aller-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
+  @media (max-width:720px){ .aller-grid{ grid-template-columns:1fr; } }
+
+  .aller-item{ display:flex; gap:10px; align-items:center; border:1px solid #e5e7eb; border-radius:10px; padding:8px 10px; }
+  .aller-name{ font-weight:900; }
+  .aller-sev{ margin-left:auto; }
+
+  .aller-item[data-sev="strict"] { border-color:#fca5a5; background:#fff7f7; }
+  .aller-item[data-sev="medium"] { border-color:#fbbf24; background:#fffbeb; }
+  .aller-item[data-sev="loose"]  { border-color:#86efac; background:#f0fdf4; }
+  .aller-item select[data-sev="strict"] { background:#fee2e2; border-color:#fca5a5; }
+  .aller-item select[data-sev="medium"] { background:#fef3c7; border-color:#fbbf24; }
+  .aller-item select[data-sev="loose"]  { background:#d1fae5; border-color:#86efac; }
+
+  .aller-item[data-checked="0"]{ border-color:#e5e7eb; background:#fff; }
+  .aller-item select{ background:#fff; border-color:#e5e7eb; }
+  .aller-item[data-checked="1"][data-sev="strict"] { border-color:#fca5a5; background:#fff7f7; }
+  .aller-item[data-checked="1"][data-sev="medium"] { border-color:#fbbf24; background:#fffbeb; }
+  .aller-item[data-checked="1"][data-sev="loose"]  { border-color:#86efac; background:#f0fdf4; }
+  .aller-item[data-checked="1"] select[data-sev="strict"] { background:#fee2e2; border-color:#fca5a5; }
+  .aller-item[data-checked="1"] select[data-sev="medium"] { background:#fef3c7; border-color:#fbbf24; }
+  .aller-item[data-checked="1"] select[data-sev="loose"]  { background:#d1fae5; border-color:#86efac; }
+
+  .extra-wrap{ margin-top:18px; background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px; }
+  .extra-grid{ display:grid; grid-template-columns:1fr 160px 100px; gap:10px; align-items:center; }
+  @media (max-width:720px){ .extra-grid{ grid-template-columns:1fr 140px 80px; } }
+  .extra-item{ display:contents; }
+  .extra-text{ border:1px solid #e5e7eb; border-radius:10px; padding:8px 10px; width:100%; }
+  .extra-sev select{ width:100%; }
+  .extra-actions .btn-del{ width:100%; text-align:center; }
+  .extra-row-color[data-sev="strict"] .extra-text{ background:#fff7f7; border-color:#fca5a5; }
+  .extra-row-color[data-sev="medium"] .extra-text{ background:#fffbeb; border-color:#fbbf24; }
+  .extra-row-color[data-sev="loose"]  .extra-text{ background:#f0fdf4; border-color:#86efac; }
+  .extra-row-color[data-sev="none"]  .extra-text{ background:#fff; border-color:#e5e7eb; }
+
+  .sev-legend{ display:flex; gap:12px; align-items:center; margin:6px 0 12px; }
+  .sev-dot{ width:10px; height:10px; border-radius:999px; display:inline-block; margin-right:6px; vertical-align:middle; }
+  .sev-dot.strict{ background:#ef4444; } .sev-dot.medium{ background:#f59e0b; } .sev-dot.loose{ background:#10b981; }
+</style>
+
+<main class="mypage">
+  <h1 style="font-weight:900; margin:0 0 8px;">マイページ</h1>
+  <p class="muted">プロフィール確認・お気に入り管理・マイアレルゲン設定</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-profile" aria-controls="panel-profile" aria-selected="true">プロフィール</button>
+    <button class="tab" role="tab" id="tab-favs" aria-controls="panel-favs" aria-selected="false">お気に入り</button>
+    <button class="tab" role="tab" id="tab-aller" aria-controls="panel-aller" aria-selected="false">アレルゲン</button>
+  </div>
+
+  <div class="panels">
+    <!-- プロフィール -->
+    <section id="panel-profile" class="panel" role="tabpanel" aria-labelledby="tab-profile" aria-hidden="false">
+      <div class="profile-card">
+        <div class="avatar">
+          {% if profile and profile.avatar_url %}
+            <img src="{{ profile.avatar_url }}" alt="avatar" style="width:100%; height:100%; object-fit:cover;">
+          {% else %}
+            <span>{{ (profile.name or 'G')[:1] if profile else 'G' }}</span>
+          {% endif %}
+        </div>
+        <div class="fields">
+          <div class="row"><div class="label">名前</div><div class="value">{{ profile.name if profile else 'Guest' }}</div></div>
+          <div class="row"><div class="label">メール</div><div class="value">{{ profile.email if profile else '-' }}</div></div>
+          <div class="row"><div class="label">会員ID</div><div class="value">{{ profile.id if profile else '1' }}</div></div>
+          <div class="row"><div class="label">お気に入り</div><div class="value">{{ fav_stores|length if fav_stores else 0 }} 件</div></div>
+
+          <!-- 言語切替 -->
+          <div class="row" style="margin-top:8px;">
+            <div class="label">言語</div>
+            <div class="lang-inline">
+              <button type="button" class="lang-chip" data-lang="ja">日本語</button>
+              <button type="button" class="lang-chip" data-lang="en">English</button>
+            </div>
+          </div>
+
+          <!-- アクション -->
+          <div class="row" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
+            <a class="btn" href="{{ url_for('mypage_profile') }}">編集</a>
+            <a class="btn" href="{{ url_for('search') }}">検索へ</a>
+            <form method="post" action="{{ url_for('logout') }}" style="display:inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn">ログアウト</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- お気に入り -->
+    <section id="panel-favs" class="panel" role="tabpanel" aria-labelledby="tab-favs" aria-hidden="true">
+      <div class="fav-head">
+        <div style="font-weight:800;">あなたのお気に入り</div>
+        <div class="fav-count">{{ fav_stores|length if fav_stores else 0 }} 件</div>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <input id="fav-search" type="search" placeholder="お気に入り内を検索（名前・住所・カテゴリ）" style="flex:1; padding:8px 10px; border:1px solid #e5e7eb; border-radius:10px;">
+        <a class="btn" href="{{ url_for('search') }}#favorites">お気に入りを探す</a>
+      </div>
+      <div class="fav-grid" id="fav-grid">
+        {% if fav_stores %}
+          {% for s in fav_stores %}
+            {% set _sid = (s.sid if s.sid is defined else (s['店舗ID'] if '店舗ID' in s else (s.id if s.id is defined else None))) %}
+            {% set _name = s['店舗名'] if '店舗名' in s else (s.name if s.name is defined else '') %}
+            {% set _addr = s['住所']   if '住所'   in s else (s.address if s.address is defined else '') %}
+            {% set _cat  = s['カテゴリ'] if 'カテゴリ' in s else (s.category if s.category is defined else '') %}
+            {% set _insta = s['InstagramURL'] if 'InstagramURL' in s else (s.instagram if s.instagram is defined else '') %}
+            {% set _menu  = s['メニューURL']   if 'メニューURL'   in s else (s.menu_url if s.menu_url is defined else '') %}
+            {% set _reserve = s['ReservationURL'] if 'ReservationURL' in s else (s.reserve_url if s.reserve_url is defined else '') %}
+            <article class="fav-card" data-id="{{ _sid }}" data-name="{{ _name }}" data-address="{{ _addr }}" data-category="{{ _cat }}">
+              <div class="fav-title">{{ _name or '（名称不明）' }}</div>
+              <div class="fav-meta">{{ _addr }}{% if _cat %}｜{{ _cat }}{% endif %}</div>
+              <div class="fav-actions">
+                {% if _sid %}
+                  <a class="btn" href="{{ url_for('store_detail', store_id=_sid) }}">店舗詳細</a>
+                  <a class="btn" href="{{ url_for('allergy', store_id=_sid) }}">アレルギー表</a>
+                {% endif %}
+                {% if _menu %}<a class="btn" href="{{ _menu }}" target="_blank" rel="noopener">メニュー</a>{% endif %}
+                {% if _insta %}<a class="btn" href="{{ _insta }}" target="_blank" rel="noopener">Instagram</a>{% endif %}
+                {% if _reserve %}<a class="btn" href="{{ _reserve }}" target="_blank" rel="noopener">予約</a>{% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        {% else %}
+          <div class="muted">お気に入りはまだありません。検索からハート❤️で追加できます。</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- アレルゲン -->
+    <section id="panel-aller" class="panel" role="tabpanel" aria-labelledby="tab-aller" aria-hidden="true">
+      <form class="aller-wrap" method="post" action="{{ url_for('mypage_save_allergens') }}">
+        <div class="sev-legend">
+          <span><i class="sev-dot strict"></i>重度</span>
+          <span><i class="sev-dot medium"></i>中</span>
+          <span><i class="sev-dot loose"></i>ゆるめ</span>
+        </div>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <p class="note">プリセット＋自由入力のアレルゲンを保存します。検索一覧の「あなた向け安全度」、アレルギー表の列ハイライトに反映されます。</p>
+
+        <div class="aller-grid">
+          {% for a in allergens %}
+            {# ★ デフォルトを 'none' に変更 #}
+            {% set sev = (current_allergens.get(a) if current_allergens else 'none') or 'none' %}
+            {% set idx = loop.index %}
+            {% set checked = current_allergens and a in current_allergens %}
+            <div class="aller-item" data-index="{{ idx }}">
+              <input id="allergen_{{ idx }}" type="checkbox" name="allergen" value="{{ a }}" {% if checked %}checked{% endif %}>
+              <label class="aller-name" for="allergen_{{ idx }}">{{ a }}</label>
+              <span class="aller-sev">
+                <select name="severity_{{ a }}">
+                  <option value="none"   {% if not checked %}selected{% elif sev=='none' %}selected{% endif %}>なし</option>
+                  <option value="strict" {% if checked and sev=='strict' %}selected{% endif %}>重度</option>
+                  <option value="medium" {% if checked and sev=='medium' %}selected{% endif %}>中</option>
+                  <option value="loose"  {% if checked and sev=='loose' %}selected{% endif %}>ゆるめ</option>
+                </select>
+              </span>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="extra-wrap">
+          <div style="font-weight:800; margin-bottom:8px;">その他のアレルゲン</div>
+          <div class="muted" style="margin-bottom:8px;">例：ピスタチオ、ラクトース、ナッツ 等。1行につき1項目で追加できます。</div>
+          <div id="extra-grid" class="extra-grid">
+            {% set others = other_allergens or [] %}
+            {% if others and others|length > 0 %}
+              {% for o in others %}
+                <div class="extra-item extra-row-color" data-sev="{{ o.severity|default('none') }}">
+                  <input class="extra-text" type="text" name="other_label" value="{{ o.label }}">
+                  <div class="extra-sev">
+                    <select name="other_severity">
+                      <option value="none"   {% if o.severity=='none' %}selected{% endif %}>なし</option>
+                      <option value="strict" {% if o.severity=='strict' %}selected{% endif %}>重度</option>
+                      <option value="medium" {% if o.severity=='medium' %}selected{% endif %}>中</option>
+                      <option value="loose"  {% if o.severity=='loose' %}selected{% endif %}>ゆるめ</option>
+                    </select>
+                  </div>
+                  <div class="extra-actions"><button class="btn btn-del" type="button">削除</button></div>
+                </div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div style="margin-top:10px;"><button id="btn-add-extra" class="btn" type="button">その他を追加</button></div>
+        </div>
+
+        <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" type="submit">保存する</button>
+          <a class="btn" href="{{ url_for('search') }}">検索へ戻る</a>
+        </div>
+      </form>
+    </section>
+  </div>
+</main>
+
+<script>
+  // タブ
+  (function(){
+    const tabs=[{b:'#tab-profile',p:'#panel-profile'},{b:'#tab-favs',p:'#panel-favs'},{b:'#tab-aller',p:'#panel-aller'}]
+      .map(x=>({btn:document.querySelector(x.b), panel:document.querySelector(x.p)}));
+    function show(i){ tabs.forEach((t,idx)=>{ t.btn.setAttribute('aria-selected', idx===i?'true':'false'); t.panel.setAttribute('aria-hidden', idx===i?'false':'true'); });
+      const h=i===1?'#favorites':(i===2?'#allergens':'#profile'); history.replaceState(null,'',location.pathname+h); }
+    tabs.forEach((t,i)=>t.btn.addEventListener('click',()=>show(i)));
+    const map={'#favorites':1,'#allergens':2,'#profile':0}; show(map[location.hash] ?? 0);
+  })();
+
+  // 言語切替（保存→即リロード）
+  (function(){
+    const chips=[...document.querySelectorAll('.lang-chip')];
+    function current(){ try{return window.LumiLang?.get() || localStorage.getItem('lumi_lang') || 'ja';}catch(e){return 'ja'} }
+    function setLang(v){
+      try{
+        localStorage.setItem('lumi_lang', v);
+        document.cookie='lumi_lang='+encodeURIComponent(v)+'; max-age=31536000; path=/';
+      }catch(e){}
+      setTimeout(()=>location.reload(), 50);
+    }
+    function paint(){
+      const cur=current();
+      chips.forEach(c=>c.classList.toggle('active', c.dataset.lang===cur));
+    }
+    chips.forEach(c=>c.addEventListener('click', ()=>setLang(c.dataset.lang)));
+    paint();
+  })();
+
+  // アレルゲン行の見た目と整合性（未選択は必ず「なし」）
+  (function(){
+    const items=[...document.querySelectorAll('.aller-item')];
+    function paint(row){
+      const cb=row.querySelector('input[type="checkbox"][name="allergen"]');
+      const sel=row.querySelector('select[name^="severity_"]'); if(!cb||!sel) return;
+      if(!cb.checked) sel.value='none';            // ← 未チェックは強制で「なし」
+      if(cb.checked && sel.value==='none') sel.value='strict'; // チェックONなら既定は「重度」
+      row.dataset.checked = cb.checked ? '1' : '0';
+      row.dataset.sev = sel.value || 'none';
+      sel.dataset.sev = sel.value || 'none';
+    }
+    items.forEach(row=>{
+      const cb=row.querySelector('input[name="allergen"]');
+      const sel=row.querySelector('select[name^="severity_"]');
+      row.addEventListener('click', (e)=>{
+        if(e.target.tagName==='SELECT' || e.target.tagName==='OPTION' || e.target.closest('select')) return;
+        if(e.target.tagName==='INPUT' && e.target.type==='checkbox') return;
+        cb.checked = !cb.checked;
+        paint(row);
+      });
+      cb&&cb.addEventListener('change', ()=>paint(row));
+      sel&&sel.addEventListener('change', ()=>paint(row));
+      paint(row);
+    });
+  })();
+
+  // お気に入り内検索
+  (function(){
+    const qEl=document.getElementById('fav-search'); const grid=document.getElementById('fav-grid'); if(!qEl||!grid) return;
+    const cards=[...grid.querySelectorAll('.fav-card')];
+    const ok=(el,q)=>{ q=(q||'').toLowerCase(); if(!q) return true;
+      return [el.dataset.name||'', el.dataset.address||'', el.dataset.category||''].some(s=>s.toLowerCase().includes(q)); };
+    const apply=(q)=>{ let v=0; cards.forEach(c=>{ const m=ok(c,q); c.hidden=!m; if(m) v++; }); const cnt=document.querySelector('.fav-count'); if(cnt) cnt.textContent=v+' 件'; };
+    qEl.addEventListener('input', e=>apply(e.target.value));
+  })();
+
+  // その他（自由入力）
+  (function(){
+    const grid=document.getElementById('extra-grid'); const addBtn=document.getElementById('btn-add-extra');
+    function bind(row){
+      const sel=row.querySelector('select[name="other_severity"]'); const inp=row.querySelector('input[name="other_label"]'); const del=row.querySelector('.btn-del');
+      const paint=()=>{ const v=sel.value||'none'; row.dataset.sev=v; inp.style.opacity=(!inp.value.trim()||v==='none')?.85:1; };
+      paint(); sel.addEventListener('change',paint); inp.addEventListener('input',paint); del.addEventListener('click',()=>row.remove());
+    }
+    function make(label='',sev='none'){ const wrap=document.createElement('div'); wrap.className='extra-item extra-row-color'; wrap.dataset.sev=sev;
+      wrap.innerHTML=`<input class="extra-text" type="text" name="other_label" value="${label}">
+        <div class="extra-sev"><select name="other_severity">
+          <option value="none" ${sev==='none'?'selected':''}>なし</option>
+          <option value="strict" ${sev==='strict'?'selected':''}>重度</option>
+          <option value="medium" ${sev==='medium'?'selected':''}>中</option>
+          <option value="loose" ${sev==='loose'?'selected':''}>ゆるめ</option>
+        </select></div><div class="extra-actions"><button class="btn btn-del" type="button">削除</button></div>`; bind(wrap); return wrap; }
+    addBtn.addEventListener('click',()=>grid.appendChild(make())); grid.querySelectorAll('.extra-item').forEach(bind);
+  })();
+</script>
+{% endblock %}

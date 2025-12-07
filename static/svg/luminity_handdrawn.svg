@@ -1,0 +1,19 @@
+
+<svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    path {
+      fill: none;
+      stroke: white;
+      stroke-width: 3;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: draw 4s ease forwards;
+    }
+    @keyframes draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+  </style>
+  <path d="M10 80 C 40 10, 90 140, 130 80 S 210 10, 250 80 S 310 140, 350 80 S 410 10, 450 80 S 510 150, 550 80" />
+</svg>

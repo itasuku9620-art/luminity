@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Step1 - 基本情報登録 | Luminity</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&family=Shippori+Mincho:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#fff9ee; --ink:#2b261f; --muted:#6b6052; --card:#ffffff; --line:#efe6d8;
+      --accent:#ffb300; --accent-deep:#f57c00; --focus:#ffe082; --radius:18px; --shadow:0 10px 30px rgba(110,72,30,.12);
+    }
+    *{ box-sizing:border-box }
+    body{ margin:0; color:var(--ink); background:linear-gradient(180deg,#fffcf6 0%, #fff9ee 100%); font-family:Inter,"Noto Sans JP",system-ui,sans-serif }
+    main{ min-height:100dvh; display:grid; place-items:center; padding:24px; position:relative }
+    main::before{
+      content:""; position:fixed; inset:0;
+      background:
+        repeating-linear-gradient(45deg, rgba(0,0,0,.012) 0 2px, transparent 2px 8px),
+        repeating-linear-gradient(-45deg, rgba(0,0,0,.010) 0 1.5px, transparent 1.5px 7px);
+      pointer-events:none;
+    }
+    .panel{ width:min(980px,100%); border:1px solid var(--line); border-radius:calc(var(--radius) + 8px); background:var(--card); box-shadow:var(--shadow); padding:24px; }
+    header{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:8px }
+    .brand{ color:var(--accent-deep); font-weight:900; letter-spacing:.03em; font-family:"Shippori Mincho","Noto Serif JP",serif }
+    .steps{ color:var(--muted); font-size:13px }
+    h1{ font-size:22px; margin:12px 0 18px; font-weight:900; font-family:"Shippori Mincho","Noto Serif JP",serif }
+    form{ display:grid; grid-template-columns:1fr 1fr; gap:18px }
+    @media (max-width:800px){ form{ grid-template-columns:1fr } }
+    .field{ display:grid; gap:6px }
+    label{ font-size:12px; color:var(--muted) }
+    .en{ font-size:11px; color:#8b7f70 }
+    input[type="text"], input[type="email"]{
+      width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#ffffff; color:var(--ink); font-size:14px; outline:none;
+    }
+    input:focus{ border-color:#f7c566; box-shadow:0 0 0 4px rgba(255,224,130,.4) }
+    .section{ grid-column:1 / -1 }
+    .section h2{ font-size:14px; color:#8b5a14; margin:10px 0; font-family:"Shippori Mincho","Noto Serif JP",serif }
+    .tags-box{ display:flex; flex-wrap:wrap; gap:8px; max-height:220px; overflow:auto; padding:10px; border:1px dashed var(--line); border-radius:12px; background:#fff4d6 }
+    .tag-checkbox{ display:none }
+    .tag-label{
+      display:inline-block; padding:8px 12px; border-radius:100px; background:#ffffff; border:1px solid var(--line); color:#3b2f2f; font-size:13px; cursor:pointer;
+    }
+    .tag-checkbox:checked + .tag-label{ background:#ffe8ad; border-color:#ffe1a0; color:#8b5a14 }
+    .row{ display:flex; gap:14px; align-items:center; flex-wrap:wrap }
+    .subtle{ color:var(--muted); font-size:12px }
+    .primary{
+      width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--accent);
+      background:linear-gradient(180deg,#ffe8ad,#ffc44d); color:#5a3b00; font-weight:900; cursor:pointer
+    }
+    .primary:disabled{ opacity:.6; cursor:not-allowed; filter:grayscale(.2) }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel" role="form">
+      <header>
+        <div class="brand">Luminity</div>
+        <div class="steps">Step 1 / 2</div>
+      </header>
+
+      <h1 data-i18n="基本情報 & マイアレルゲン|Profile & Allergens">基本情報 & マイアレルゲン</h1>
+      <form method="POST" id="registerForm" novalidate>
+        <div class="field">
+          <label for="name" data-i18n="お名前|Full name">お名前</label>
+          <input id="name" type="text" name="name" required autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="email" data-i18n="メールアドレス|Email">メールアドレス</label>
+          <input id="email" type="email" name="email" required autocomplete="email">
+        </div>
+        <div class="field section">
+          <label for="address" data-i18n="住所|Address">住所</label>
+          <input id="address" type="text" name="address" required autocomplete="street-address" placeholder="例：東京都千代田区… / e.g. Chiyoda, Tokyo">
+        </div>
+
+        <div class="section">
+          <h2 data-i18n="特定原材料 7 品目|Specified 7 allergens">特定原材料 7 品目</h2>
+          <div class="tags-box">
+            {% for item in ['卵','乳','小麦','えび','かに','そば','落花生'] %}
+              <input class="tag-checkbox" id="a_main_{{ loop.index }}" type="checkbox" name="allergens" value="{{ item }}">
+              <label class="tag-label" for="a_main_{{ loop.index }}">{{ item }}</label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="section">
+          <h2 data-i18n="その他 21 品目|Other 21 allergens">その他 21 品目</h2>
+          <div class="tags-box">
+            {% for item in ['アーモンド','あわび','いか','いくら','オレンジ','カシューナッツ','キウイフルーツ','牛肉','くるみ','さけ','さば','大豆','鶏肉','バナナ','豚肉','まつたけ','もも','やまいも','りんご','ゼラチン'] %}
+              <input class="tag-checkbox" id="a_sub_{{ loop.index }}" type="checkbox" name="allergens" value="{{ item }}">
+              <label class="tag-label" for="a_sub_{{ loop.index }}">{{ item }}</label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="section row">
+          <label class="row" style="gap:10px;">
+            <input type="checkbox" id="no_allergy" name="no_allergy" value="true">
+            <span data-i18n="自分はアレルギーを保持していない|I have no allergies">自分はアレルギーを保持していない</span>
+          </label>
+          <span class="subtle" data-i18n="（いずれかの選択 or これにチェックで次へ進めます）|Select any allergen or check this to proceed.">（いずれかの選択 or これにチェックで次へ進めます）</span>
+        </div>
+
+        <div class="section">
+          <h2 data-i18n="その他の食制限|Other dietary preferences">その他の食制限</h2>
+          <div class="row">
+            <label><input type="checkbox" class="others" name="others" value="ビーガン"> <span data-i18n="ビーガン|Vegan">ビーガン</span></label>
+            <label><input type="checkbox" class="others" name="others" value="ハラール"> <span data-i18n="ハラール|Halal">ハラール</span></label>
+            <label><input type="checkbox" class="others" name="others" value="コーシャ"> <span data-i18n="コーシャ|Kosher">コーシャ</span></label>
+          </div>
+        </div>
+
+        <div class="section">
+          <button id="submitBtn" class="primary" type="submit" disabled data-i18n="次へ / Next|Next">次へ / Next</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const nameEl = document.getElementById('name');
+    const emailEl = document.getElementById('email');
+    const addressEl = document.getElementById('address');
+    const validate = ()=>{
+      const filled = nameEl.value.trim() && emailEl.value.trim() && addressEl.value.trim();
+      const anyAllergen = document.querySelectorAll('input[name="allergens"]:checked').length > 0;
+      const noAllergy = document.getElementById('no_allergy').checked;
+      const others = document.querySelectorAll('input.others:checked').length > 0;
+      submitBtn.disabled = !(filled && (anyAllergen || noAllergy || others));
+    };
+    form.addEventListener('input', validate);
+    window.addEventListener('load', validate);
+  </script>
+</body>
+</html>

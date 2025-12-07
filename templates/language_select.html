@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>言語を選択 | Luminity</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800;900&family=Noto+Sans+JP:wght@400;800;900&family=Shippori+Mincho:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#fff9ee; --ink:#2b261f; --line:#efe6d8; --accent:#ffb300; --accent-deep:#f57c00; }
+    body{ margin:0; background:linear-gradient(180deg,#fff5da,#fff9ee); color:var(--ink);
+      font-family:Inter,"Noto Sans JP",system-ui,sans-serif; min-height:100dvh; display:grid; place-items:center; padding:24px; }
+    .wrap{ width:min(840px,100%); background:#fff; border:1px solid var(--line); border-radius:20px;
+      box-shadow:0 12px 30px rgba(110,72,30,.12); padding:22px; }
+    h1{ margin:0 0 6px; font-family:"Shippori Mincho","Noto Serif JP",serif; font-size:26px; font-weight:900; color:#111; }
+    p{ margin:6px 0 14px; line-height:1.8; }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+    .choice{ border:2px solid #ffe3a3; background:#fff7cf; border-radius:16px; padding:16px; cursor:pointer; font-weight:900; font-size:18px; text-align:center; }
+    .choice:hover{ background:#ffeab9; }
+    .meta{ color:#6b6052; font-size:13px; }
+    .next{ margin-top:16px; display:flex; gap:8px; flex-wrap:wrap; }
+    .btn{ display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid var(--line);
+      border-radius:12px; background:#fff; color:#2b261f; text-decoration:none; font-weight:900; }
+    .cta{ background:linear-gradient(180deg,#ffe08a,#ffc44d); border-color:#ffd166; }
+  </style>
+</head>
+<body>
+  <section class="wrap" role="main">
+    <h1>言語を選択 / Choose your language</h1>
+    <p>
+      Luminity は、アレルギー保持者にとって<strong>希望の光</strong>となることを目指しています。  
+      日本でも世界でも、旅先でも、食で困らない社会へ。<span class="meta">※ 言語は後からマイページでも変更できます。</span>
+    </p>
+    <div class="grid">
+      <button class="choice" data-lang="ja">日本語</button>
+      <button class="choice" data-lang="en">English</button>
+    </div>
+    <div class="next">
+      <a id="go-next" class="btn cta" href="/login">次へ / Continue</a>
+      <a class="btn" href="/search">スキップして見る / Skip</a>
+    </div>
+  </section>
+
+  <script>
+    (function(){
+      const LS_KEY='lumi_lang';
+      function setLang(v){
+        try{
+          localStorage.setItem(LS_KEY, v);
+          document.cookie = 'lumi_lang='+encodeURIComponent(v)+'; max-age=31536000; path=/';
+          document.documentElement.lang = (v==='en'?'en':'ja');
+        }catch(e){}
+      }
+      const qs=new URLSearchParams(location.search);
+      const next=qs.get('next') || '/login';
+      document.getElementById('go-next').setAttribute('href', next);
+
+      document.querySelectorAll('.choice').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          setLang(btn.dataset.lang);
+          // 言語選択と同時に次へ
+          location.replace(next);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

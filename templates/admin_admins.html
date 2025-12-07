@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}管理者ロール管理{% endblock %}
+
+{% block content %}
+<section class="container" style="max-width:900px;margin:1.5rem auto;">
+  <h1 class="page-title" style="margin-bottom:1rem;">管理者ロール管理</h1>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <ul class="flash-list" style="margin:0 0 1rem 0;padding-left:1rem;">
+        {% for cat, msg in messages %}
+          <li class="flash-{{cat}}">{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <div class="card" style="background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.06);overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead style="background:#fff7e0;">
+        <tr>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ID</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">メール</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">名前</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">ロール</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">最終ログイン</th>
+          <th style="text-align:left;padding:.6rem .8rem;border-bottom:1px solid #eee;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows and rows|length > 0 %}
+          {% for a in rows %}
+          <tr>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ a.id }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ a.email }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ a.name or '' }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+              {{ a.role or 'super' }}
+            </td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">{{ a.last_login or '—' }}</td>
+            <td style="padding:.6rem .8rem;border-bottom:1px solid #f2f2f2;">
+              <form method="post" action="{{ url_for('admin_admins') }}" style="display:inline-flex;gap:.4rem;align-items:center;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="id" value="{{ a.id }}">
+                <select name="role" style="padding:.45rem .6rem;border:1px solid #ddd;border-radius:10px;">
+                  <option value="super" {% if (a.role or 'super')=='super' %}selected{% endif %}>super</option>
+                  <option value="moderator" {% if a.role=='moderator' %}selected{% endif %}>moderator</option>
+                  <option value="support" {% if a.role=='support' %}selected{% endif %}>support</option>
+                </select>
+                <button class="btn" type="submit" style="padding:.45rem .9rem;border-radius:10px;background:#fff;border:1px solid #ddd;">保存</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="6" style="padding:1rem;color:#777;text-align:center;">管理者がいません。</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn"
+       style="display:inline-block;padding:.6rem 1rem;border-radius:999px;background:#fff;border:1px solid #ddd;text-decoration:none;">
+      ← ダッシュボードに戻る
+    </a>
+  </div>
+</section>
+{% endblock %}
