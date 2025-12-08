@@ -4692,6 +4692,9 @@ def allergy_pdf_download(store_id: int):
     )
 
 
+@app.route("/")
+def index():
+    return redirect("/allergy_pdf/1", code=302)
 
 # ============== Shortcuts ==============
 @app.route("/login/admin")
