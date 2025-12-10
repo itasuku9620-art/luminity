@@ -30,6 +30,14 @@ from flask import (
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
+import json, os
+from google.oauth2 import service_account
+
+cred_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+creds = service_account.Credentials.from_service_account_info(
+    json.loads(cred_json)
+)
+
 # ============== ENV / APP ==============
 APP_ROOT = Path(__file__).resolve().parent
 load_dotenv(APP_ROOT / ".env", override=True)
@@ -4691,10 +4699,6 @@ def allergy_pdf_download(store_id: int):
         download_name=filename,
     )
 
-
-@app.route("/")
-def index():
-    return redirect("/allergy_pdf/1", code=302)
 
 # ============== Shortcuts ==============
 @app.route("/login/admin")
