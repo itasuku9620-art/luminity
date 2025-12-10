@@ -4671,7 +4671,7 @@ def allergy_pdf_download(store_id: int):
     other = [a for a in allergens if a not in primary]
 
     # QRコードURL（HTML版アレルギー表）
-    allergy_url = url_for("allergy_pdf", store_id=store_id, _external=True)
+    allergy_url = url_for("allergy_public", store_id=store_id, _external=True)
 
     pdf_bytes = build_allergy_pdf(
         store=store,
