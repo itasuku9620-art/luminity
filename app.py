@@ -33,10 +33,23 @@ from dotenv import load_dotenv
 import json, os
 from google.oauth2 import service_account
 
-cred_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
-creds = service_account.Credentials.from_service_account_info(
-    json.loads(cred_json)
-)
+def load_google_credentials():
+    cred_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+    if not cred_json:
+        raise RuntimeError("環境変数 GOOGLE_CREDENTIALS_JSON が設定されていません")
+
+    try:
+        info = json.loads(cred_json)
+    except Exception as e:
+        raise RuntimeError("GOOGLE_CREDENTIALS_JSON が不正な JSON です") from e
+
+    return service_account.Credentials.from_service_account_info(
+        info,
+        scopes=[
+            "https://www.googleapis.com/auth/spreadsheets.readonly",
+            "https://www.googleapis.com/auth/drive.readonly",
+        ]
+    )
 
 # ============== ENV / APP ==============
 APP_ROOT = Path(__file__).resolve().parent
@@ -2047,12 +2060,11 @@ def _authorize_main_sheet_client():
 
     scope = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
-    creds = Credentials.from_service_account_file(
-        str(CREDS_FILE),
-        scopes=scope,
-    )
+    creds = load_google_credentials()
     client = gspread.authorize(creds)
     return client
+
+    
 
 
 
@@ -2327,10 +2339,7 @@ def _fetch_allergy_table_by_store(store: dict) -> Tuple[List[Dict[str,str]], Lis
         "https://www.googleapis.com/auth/drive.readonly",
     ]
 
-    creds = Credentials.from_service_account_file(
-        str(CREDS_FILE),
-        scopes=scope,
-    )
+    creds = load_google_credentials()
     client = gspread.authorize(creds)
 
     def _extract_key_from_url(url: str):
@@ -4404,7 +4413,7 @@ def _admin_sheets_diagnose():
     import os
     info = {
         "SHEET_ID": bool(os.getenv("SHEET_ID")),
-        "CREDS_JSON": os.getenv("GSPREAD_CREDENTIALS_JSON", "credentials.json"),
+        "CREDS_JSON": bool(os.getenv("GOOGLE_CREDENTIALS_JSON")),
     }
     ok, rows, err = True, [], None
     try:
