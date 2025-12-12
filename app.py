@@ -30,6 +30,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
+
 import json, os
 from google.oauth2 import service_account
 
@@ -2596,6 +2597,14 @@ def _home_redirect_legacy():
 def search():
     q = (request.args.get("q") or "").strip()
     stores = merge_ratings(get_all_stores_from_sheet_cached())
+
+    import traceback
+    try:
+        stores = merge_ratings(get_all_stores_from_sheet_cached())
+    except Exception as e:
+        print("🔥 ERROR while loading stores from Google Sheets 🔥")
+        traceback.print_exc()
+        raise
 
     uid = int(session.get("user_id", 1))
     db = get_db()
