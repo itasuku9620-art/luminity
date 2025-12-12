@@ -2596,7 +2596,6 @@ def _home_redirect_legacy():
 @app.route("/search")
 def search():
     q = (request.args.get("q") or "").strip()
-    stores = merge_ratings(get_all_stores_from_sheet_cached())
 
     import traceback
     try:
