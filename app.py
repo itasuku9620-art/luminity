@@ -33,7 +33,7 @@ from dotenv import load_dotenv
 import json, os
 from google.oauth2 import service_account
 
-def load_google_credentials():
+def load_google_credentials(scopes):
     cred_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
     if not cred_json:
         raise RuntimeError("環境変数 GOOGLE_CREDENTIALS_JSON が設定されていません")
@@ -45,11 +45,9 @@ def load_google_credentials():
 
     return service_account.Credentials.from_service_account_info(
         info,
-        scopes=[
-            "https://www.googleapis.com/auth/spreadsheets.readonly",
-            "https://www.googleapis.com/auth/drive.readonly",
-        ]
+        scopes=scopes,
     )
+
 
 # ============== ENV / APP ==============
 APP_ROOT = Path(__file__).resolve().parent
