@@ -2059,7 +2059,7 @@ def _authorize_main_sheet_client():
 
     scope = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
-    creds = load_google_credentials()
+    creds = load_google_credentials(scopes)
     client = gspread.authorize(creds)
     return client
 
@@ -2338,7 +2338,7 @@ def _fetch_allergy_table_by_store(store: dict) -> Tuple[List[Dict[str,str]], Lis
         "https://www.googleapis.com/auth/drive.readonly",
     ]
 
-    creds = load_google_credentials()
+    creds = load_google_credentials(scopes)
     client = gspread.authorize(creds)
 
     def _extract_key_from_url(url: str):
