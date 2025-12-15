@@ -34,7 +34,13 @@ from dotenv import load_dotenv
 import json, os
 from google.oauth2 import service_account
 
-def load_google_credentials(scopes):
+def load_google_credentials(scopes=None):
+    if scopes is None:
+        scopes = [
+            "https://www.googleapis.com/auth/spreadsheets.readonly",
+            "https://www.googleapis.com/auth/drive.readonly",
+        ]
+
     cred_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
     if not cred_json:
         raise RuntimeError("環境変数 GOOGLE_CREDENTIALS_JSON が設定されていません")
@@ -48,6 +54,7 @@ def load_google_credentials(scopes):
         info,
         scopes=scopes,
     )
+
 
 
 # ============== ENV / APP ==============
@@ -2059,7 +2066,7 @@ def _authorize_main_sheet_client():
 
     scope = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
-    creds = load_google_credentials(scopes)
+    creds = load_google_credentials()
     client = gspread.authorize(creds)
     return client
 
@@ -2338,7 +2345,7 @@ def _fetch_allergy_table_by_store(store: dict) -> Tuple[List[Dict[str,str]], Lis
         "https://www.googleapis.com/auth/drive.readonly",
     ]
 
-    creds = load_google_credentials(scopes)
+    creds = load_google_credentials()
     client = gspread.authorize(creds)
 
     def _extract_key_from_url(url: str):
