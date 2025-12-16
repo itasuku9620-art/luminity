@@ -152,6 +152,9 @@ def build_allergy_pdf(
     allergy_url: str | None = None,
 ) -> bytes:
 
+    if not allergy_url:
+        store_id = store.get("id") or store.get("店舗ID") or 1
+        allergy_url = f"https://luminity-rlyp.onrender.com/allergy/{store_id}/agreement"
     buffer = BytesIO()
     font_name = _register_japanese_font()
 
