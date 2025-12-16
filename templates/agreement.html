@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ store.get("店舗名") }} | アレルギー表の閲覧</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .container{max-width:860px;margin:0 auto;padding:16px;}
+    .card{background:#fff;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.08);padding:16px;}
+    .title{font-size:1.35rem;font-weight:800;margin:0 0 8px;}
+    .btn{display:inline-flex;align-items:center;gap:.35rem;padding:10px 14px;border-radius:10px;background:#ffe07a;border:1px solid #ffd34a;text-decoration:none;color:#333;font-weight:700;}
+    .btn.ghost{background:#fff;border:1px solid #eee}
+    .note{background:#fff8e1;border:1px solid #ffe8ab;border-radius:10px;padding:10px 12px;margin:10px 0;}
+    nav.navbar{background:#ffc400;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+    nav .nav-logo{font-weight:800;color:#222;text-decoration:none}
+    nav .navbar-right a{color:#222;margin-left:16px;text-decoration:none;font-weight:600}
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/dashboard" class="nav-logo">Luminality</a>
+    <div class="navbar-right">
+      <a href="{{ url_for('search') }}">店舗検索</a>
+      <a href="{{ url_for('mypage') }}">マイページ</a>
+      <a href="{{ url_for('logout') }}">ログアウト</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <article class="card">
+      <h1 class="title">{{ store.get("店舗名") }} のアレルギー表 利用にあたって</h1>
+      <div class="note">
+        <p>本アレルギー表は店舗が提供する資料をもとに表示します。原材料・製造ラインは変更される場合があり、最新・正確性は保証できません。</p>
+        <p>必ずご自身で確認し、最終判断は自己責任でお願いします。重大なアレルギーをお持ちの方は、事前に店舗へ直接確認してください。</p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <a class="btn" href="{{ url_for('agreement_next', store_id=store_id) }}">同意して表示</a>
+        <a class="btn ghost" href="{{ url_for('store_detail', store_id=store_id) }}">店舗詳細に戻る</a>
+      </div>
+    </article>
+  </main>
+</body>
+</html>
