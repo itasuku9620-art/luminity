@@ -4721,6 +4721,26 @@ def allergy_pdf_download(store_id: int):
         download_name=filename,
     )
 
+# --- QR wait page (Render wake-up) ---
+@app.route("/qr/<int:store_id>", endpoint="qr_wait")
+def qr_wait(store_id: int):
+    # storeが存在しないIDなら404
+    store = get_store_by_id(store_id) or abort(404)
+
+    # 次に飛ばす先：あなたの現行ルートに合わせる
+    # いま存在しているのは「/allergy/<id>/agreement」なのでそれを使う
+    next_url = url_for("allergy_agreement", store_id=store_id, _external=True)
+
+    # 参考：トップ（適宜あなたのトップに合わせて変更OK）
+    home_url = url_for("index", _external=True) if "index" in app.view_functions else "/"
+
+    return render_template(
+        "qr_wait.html",
+        store=store,
+        store_id=store_id,
+        next_url=next_url,
+        home_url=home_url,
+    )
 
 # ============== Shortcuts ==============
 @app.route("/login/admin")
