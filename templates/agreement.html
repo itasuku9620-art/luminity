@@ -11,15 +11,16 @@
     .title{font-size:1.35rem;font-weight:800;margin:0 0 8px;}
     .btn{display:inline-flex;align-items:center;gap:.35rem;padding:10px 14px;border-radius:10px;background:#ffe07a;border:1px solid #ffd34a;text-decoration:none;color:#333;font-weight:700;}
     .btn.ghost{background:#fff;border:1px solid #eee}
-    .note{background:#fff8e1;border:1px solid #ffe8ab;border-radius:10px;padding:10px 12px;margin:10px 0;}
+    .note{background:#fff8e1;border:1px solid #ffe8ab;border-radius:10px;padding:12px 14px;margin:12px 0;}
     nav.navbar{background:#ffc400;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
     nav .nav-logo{font-weight:800;color:#222;text-decoration:none}
     nav .navbar-right a{color:#222;margin-left:16px;text-decoration:none;font-weight:600}
+    .small{font-size:0.85rem;color:#666;margin-top:8px;}
   </style>
 </head>
 <body>
   <nav class="navbar">
-    <a href="/dashboard" class="nav-logo">Luminality</a>
+    <a href="/dashboard" class="nav-logo">Luminity</a>
     <div class="navbar-right">
       <a href="{{ url_for('search') }}">店舗検索</a>
       <a href="{{ url_for('mypage') }}">マイページ</a>
@@ -29,16 +30,68 @@
 
   <main class="container">
     <article class="card">
-      <h1 class="title">{{ store.get("店舗名") }} のアレルギー表 利用にあたって</h1>
+      <h1 class="title">
+        {{ store.get("店舗名") }} のアレルギー表<br>
+        ご確認にあたって
+      </h1>
+
       <div class="note">
-        <p>本アレルギー表は店舗が提供する資料をもとに表示します。原材料・製造ラインは変更される場合があり、最新・正確性は保証できません。</p>
-        <p>必ずご自身で確認し、最終判断は自己責任でお願いします。重大なアレルギーをお持ちの方は、事前に店舗へ直接確認してください。</p>
+        <p>
+          本ページに表示されるアレルギー情報は、当店が保有する食品成分表・仕入先資料、
+          ならびにヒアリング内容をもとに整理・表示されています。
+        </p>
+        <p>
+          対応品目は、<strong>特定原材料8品目およびその他20品目</strong>です。
+        </p>
       </div>
 
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
-        <a class="btn" href="{{ url_for('agreement_next', store_id=store_id) }}">同意して表示</a>
-        <a class="btn ghost" href="{{ url_for('store_detail', store_id=store_id) }}">店舗詳細に戻る</a>
+      <div class="note">
+        <p><strong>【重要】必ずお読みください</strong></p>
+        <ul>
+          <li>
+            本情報は、<strong>すべてのアレルギー反応が起こらないことを保証するものではありません。</strong>
+          </li>
+          <li>
+            調理工程・調理器具・保存環境等により、
+            <strong>意図しない微量混入（コンタミネーション）が発生する可能性</strong>があります。
+          </li>
+          <li>
+            体質や体調、その日のコンディションにより、
+            同じ食品でも症状が出る場合があります。
+          </li>
+        </ul>
       </div>
+
+      <div class="note">
+        <p>
+          重度のアレルギーをお持ちの方や、ご不安がある場合は、
+          <strong>必ず事前に店舗スタッフへ直接ご確認ください。</strong>
+        </p>
+        <p>
+          最終的な飲食の判断は、
+          <strong>お客様ご自身の責任において行っていただきます。</strong>
+        </p>
+      </div>
+
+      <p class="small">
+        本アレルギー情報の閲覧および利用により生じたいかなる損害についても、
+        当店および本情報の作成・提供者は、
+        故意または重過失がある場合を除き、責任を負いかねます。
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+        <a class="btn" href="{{ url_for('agreement_next', store_id=store_id) }}">
+          内容を理解し、アレルギー表を見る
+        </a>
+        <a class="btn ghost" href="{{ url_for('store_detail', store_id=store_id) }}">
+          店舗詳細に戻る
+        </a>
+      </div>
+
+      <p class="small">
+        本アレルギー情報は<br>
+        <strong>Luminity（ルミニティ）</strong> により整理・提供されています。
+      </p>
     </article>
   </main>
 </body>
