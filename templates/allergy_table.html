@@ -11,8 +11,8 @@
     --ng:#ef4444;   /* 赤 */
     --na:#9aa3af;
     --hi:#fff7e6;   /* ユーザー対象列のハイライト */
-    --menu-col:240px; /* 左のメニュー列 幅 */
-    --data-col:110px; /* 各アレルゲン列 幅（ボタンで変えたければここを更新） */
+    --menu-col:240px;
+    --data-col:110px;
   }
 
   .table-wrap{
@@ -26,10 +26,9 @@
     border-collapse:separate;
     border-spacing:0;
     width:100%;
-    table-layout:fixed;   /* ▼ colgroup の幅指定を有効化 */
+    table-layout:fixed;
   }
 
-  /* 列幅（colgroup） */
   table.sheet col.menu-col{ width:var(--menu-col); }
   table.sheet col.data-col{ width:var(--data-col); }
 
@@ -40,7 +39,7 @@
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    background-clip:padding-box;  /* スクロール時の罫線欠け軽減 */
+    background-clip:padding-box;
   }
 
   thead th{ position:sticky; top:0; z-index:5; background:#fff; }
@@ -48,21 +47,39 @@
   thead th.sticky-corner{ left:0; z-index:7; outline:1px solid var(--grid); }
 
   .col-menu{ font-weight:800; }
-  .col-aller.hi{ background:var(--hi); } /* マイアレルゲン列のハイライト */
+  .col-aller.hi{ background:var(--hi); }
 
   .mark{ text-align:center; font-weight:800; }
-  .mark.ok{ color:var(--ng); }  /* ◯＝使用 → 赤で注意喚起 */
-  .mark.ng{ color:var(--ok); }  /* ✕＝不使用 → 緑で安心 */
+  .mark.ok{ color:var(--ng); }  /* ◯＝使用 → 赤 */
+  .mark.ng{ color:var(--ok); }  /* ✕＝不使用 → 緑 */
   .mark.na{ color:var(--na); }
+
+  /* ===== 凡例 ===== */
+  .legend{
+    margin:4px 0 12px;
+    font-size:13px;
+    color:#374151;
+  }
+  .legend .mark{
+    margin:0 4px;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<h1 style="margin:10px 0 14px">アレルギー表</h1>
+
+<h1 style="margin:10px 0 4px">アレルギー表</h1>
+
+<!-- ▼ タイトル直下に凡例を表示 -->
+<div class="legend">
+  凡例：
+  <span class="mark ng">✕＝不使用</span> /
+  <span class="mark ok">◯＝使用</span> /
+  <span class="mark na">－＝不明</span>
+</div>
 
 <div class="table-wrap" role="region" aria-label="アレルギー表（横スクロール可）">
   <table class="sheet">
-    <!-- ▼ 列幅を固定するための colgroup -->
     <colgroup>
       <col class="menu-col">
       {% for _ in allergens %}<col class="data-col">{% endfor %}
@@ -72,10 +89,13 @@
       <tr>
         <th class="col-menu sticky-corner">メニュー</th>
         {% for a in allergens %}
-          <th class="col-aller {% if user_allergens and a in user_allergens %}hi{% endif %}">{{ a }}</th>
+          <th class="col-aller {% if user_allergens and a in user_allergens %}hi{% endif %}">
+            {{ a }}
+          </th>
         {% endfor %}
       </tr>
     </thead>
+
     <tbody>
       {% for r in rows %}
         <tr>
@@ -91,9 +111,8 @@
   </table>
 </div>
 
-<p style="margin-top:8px;color:#6b7280;font-size:12px">
-  凡例：<span class="mark ng">✕＝不使用</span> / <span class="mark ok">◯＝使用</span> / <span class="mark na">－＝不明</span>
-</p>
-<a class="btn" href="{{ url_for('report_new') }}?kind=allergy&id={{ store.id }}">アレルギー表の誤りを報告</a>
+<a class="btn" href="{{ url_for('report_new') }}?kind=allergy&id={{ store.id }}">
+  アレルギー表の誤りを報告
+</a>
 
 {% endblock %}
